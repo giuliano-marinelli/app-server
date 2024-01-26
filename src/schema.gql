@@ -1,0 +1,169 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input BooleanFilterInput {
+  eq: Boolean
+  ne: Boolean
+}
+
+input CreateUserInput {
+  avatar: String
+  email: String!
+  password: String!
+  profile: ProfileInput
+  role: Role
+  username: String!
+}
+
+input DateFilterInput {
+  eq: DateTime
+  gt: DateTime
+  gte: DateTime
+  lt: DateTime
+  lte: DateTime
+  ne: DateTime
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Device {
+  bot: Boolean
+  brand: String
+  client: String
+  ip: String
+  model: String
+  os: String
+  type: String
+}
+
+input FilterDeviceInput {
+  bot: BooleanFilterInput
+  brand: StringFilterInput
+  client: StringFilterInput
+  ip: StringFilterInput
+  model: StringFilterInput
+  os: StringFilterInput
+  type: StringFilterInput
+}
+
+input FilterProfileInput {
+  bio: StringFilterInput
+  location: StringFilterInput
+  name: StringFilterInput
+  url: StringFilterInput
+}
+
+input FilterSessionInput {
+  blocked: BooleanFilterInput
+  closed: BooleanFilterInput
+  createdAt: DateFilterInput
+  device: FilterDeviceInput
+  token: StringFilterInput
+  updatedAt: DateFilterInput
+  user: StringFilterInput
+}
+
+input FilterUserInput {
+  createdAt: DateFilterInput
+  email: StringFilterInput
+  lastVerifiedDate: DateFilterInput
+  profile: FilterProfileInput
+  role: StringFilterInput
+  username: StringFilterInput
+  verificationCode: StringFilterInput
+  verified: BooleanFilterInput
+}
+
+input LoginInput {
+  password: String!
+  usernameOrEmail: String!
+}
+
+type Mutation {
+  createUser(createUserInput: CreateUserInput!): User!
+  deleteUser(id: ID!): User!
+  updateUser(updateUserInput: UpdateUserInput!): User!
+}
+
+input PaginationInput {
+  count: Int!
+  page: Int!
+}
+
+type Profile {
+  bio: String
+  location: String
+  name: String
+  url: String
+}
+
+input ProfileInput {
+  bio: String
+  location: String
+  name: String
+  url: String
+}
+
+type Query {
+  """Login with username or email and password. Returns the token string."""
+  login(loginInput: LoginInput!): String!
+  session(id: String!): Session!
+  sessions(filter: FilterSessionInput, optional: Boolean! = false, pagination: PaginationInput, search: String, sort: [SortInput!]): [Session!]!
+  user(id: String!): User!
+  users(filter: FilterUserInput, optional: Boolean! = false, pagination: PaginationInput, search: String, sort: [SortInput!]): [User!]!
+}
+
+"""Defines wich permissions user has."""
+enum Role {
+  """Admin role can access to all application features."""
+  ADMIN
+
+  """User role can access to application basic features."""
+  USER
+}
+
+type Session {
+  _id: ID!
+  blocked: Boolean!
+  closed: Boolean!
+  createdAt: DateTime!
+  device: Device
+  updatedAt: DateTime!
+  user: User!
+}
+
+input SortInput {
+  by: String!
+  direction: String!
+}
+
+input StringFilterInput {
+  eq: String
+  like: String
+  ne: String
+}
+
+input UpdateUserInput {
+  _id: String!
+  avatar: String
+  email: String
+  password: String
+  profile: ProfileInput
+  role: Role
+  username: String
+}
+
+type User {
+  _id: ID!
+  avatar: String
+  createdAt: DateTime!
+  email: String!
+  profile: Profile
+  role: Role!
+  username: String!
+  verified: Boolean!
+}
