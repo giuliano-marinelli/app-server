@@ -1,7 +1,8 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @ObjectType()
+@InputType('DeviceInput')
 @Schema({ _id: false })
 export class Device {
   @Field({ nullable: true })

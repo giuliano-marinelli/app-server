@@ -1,7 +1,17 @@
-import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+import {
+  Field,
+  InputType,
+  IntersectionType,
+  ObjectType,
+  OmitType,
+  PartialType,
+  PickType,
+  registerEnumType
+} from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import { MaxLength, MinLength } from 'class-validator';
+import { GraphQLEmailAddress, GraphQLObjectID, GraphQLURL } from 'graphql-scalars';
 import { Schema as MongooseSchema } from 'mongoose';
 
 import { Profile, ProfileSchema } from './profile.entity';
@@ -25,9 +35,10 @@ registerEnumType(Role, {
 });
 
 @ObjectType()
+@InputType('UserInput', { isAbstract: true })
 @Schema()
 export class User {
-  @Field(() => ID)
+  @Field(() => GraphQLObjectID)
   _id: MongooseSchema.Types.ObjectId;
 
   @Field()
@@ -41,7 +52,7 @@ export class User {
   })
   username: string;
 
-  @Field()
+  @Field(() => GraphQLEmailAddress)
   @MaxLength(100)
   @Prop({
     unique: true,
@@ -51,18 +62,18 @@ export class User {
   })
   email: string;
 
-  //@Field()
-  //@MaxLength(100)
+  @Field()
+  @MaxLength(100)
   @Prop({
     required: true
   })
   password: string;
 
-  @Field(() => Role, { defaultValue: Role.USER })
+  @Field(() => Role, { nullable: true })
   @Prop({ default: Role.USER })
   role: Role;
 
-  @Field({ nullable: true })
+  @Field(() => GraphQLURL, { nullable: true })
   @Prop()
   avatar: string;
 
@@ -70,11 +81,11 @@ export class User {
   @Prop({ default: false })
   verified: boolean;
 
-  //   @Field({ nullable: true })
+  @Field({ nullable: true })
   @Prop()
   lastVerifiedDate: Date;
 
-  //   @Field({ nullable: true })
+  @Field({ nullable: true })
   @Prop()
   verificationCode: string;
 
@@ -88,3 +99,16 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+@InputType()
+export class CreateUserInput extends OmitType(
+  User,
+  ['_id', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt'],
+  InputType
+) {}
+
+@InputType()
+export class UpdateUserInput extends IntersectionType(
+  PartialType(CreateUserInput),
+  PickType(User, ['_id'], InputType)
+) {}

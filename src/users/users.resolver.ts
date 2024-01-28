@@ -1,18 +1,17 @@
-import { Args, ID, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 
 import { subject } from '@casl/ability';
 
+import { GraphQLObjectID } from 'graphql-scalars';
 import { Schema as MongooseSchema } from 'mongoose';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { Action } from 'src/casl/casl-ability.factory';
 import { CheckPolicies } from 'src/casl/decorators/casl.decorator';
 
-import { User } from './entities/user.entity';
+import { CreateUserInput, UpdateUserInput, User } from './entities/user.entity';
 import { Session } from 'src/sessions/entities/session.entity';
 
-import { CreateUserInput } from './dto/create-user.input';
 import { FilterUserInput } from './dto/filter-user.input';
-import { UpdateUserInput } from './dto/update-user.input';
 import { PaginationInput } from 'src/search/dto/pagination.input';
 import { SortInput } from 'src/search/dto/sort.input';
 
@@ -55,8 +54,13 @@ export class UsersResolver {
   }
 
   @Public()
+  @CheckPolicies(() => ({
+    action: Action.Read,
+    subject: User.name
+  }))
   @Query(() => User, { name: 'user' })
-  async findOne(@Args('id', { type: () => String }) id: MongooseSchema.Types.ObjectId) {
+  async findOne(@Args('id', { type: () => GraphQLObjectID }) id: MongooseSchema.Types.ObjectId) {
+    console.log('id', id);
     return await this.usersService.findOne(id);
   }
 
@@ -76,7 +80,7 @@ export class UsersResolver {
     fields: { _id: args.id }
   }))
   @Mutation(() => User)
-  async deleteUser(@Args('id', { type: () => ID }) id: MongooseSchema.Types.ObjectId) {
+  async deleteUser(@Args('id', { type: () => GraphQLObjectID }) id: MongooseSchema.Types.ObjectId) {
     return await this.usersService.remove(id);
   }
 

@@ -4,10 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcryptjs';
 import { Model, Schema as MongooseSchema } from 'mongoose';
 
-import { User } from './entities/user.entity';
-
-import { CreateUserInput } from './dto/create-user.input';
-import { UpdateUserInput } from './dto/update-user.input';
+import { CreateUserInput, UpdateUserInput, User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -32,11 +29,11 @@ export class UsersService {
   }
 
   async findAll(options: { search?: string; filter?: any; sort?: any; pagination?: any; optional?: boolean }) {
-    console.log('search', options.search);
-    console.log('filter', options.filter);
-    console.log('sort', options.sort);
-    console.log('pagination', options.pagination);
-    console.log('optional', options.optional);
+    // console.log('search', options.search);
+    // console.log('filter', options.filter);
+    // console.log('sort', options.sort);
+    // console.log('pagination', options.pagination);
+    // console.log('optional', options.optional);
     return await this.userModel.find();
   }
 

@@ -23,36 +23,80 @@ export class CaslAbilityFactory {
     const resolveAction = createAliasResolver({
       filter: ['read'], // filter action includes read action but not vice versa
       modify: ['update', 'delete']
+      // manage not includes filter
     });
 
-    if (!user) {
-      // not logged user can read user fields
-      can(Action.Read, User.name);
-      // not logged user can't read these user fields
-      cannot(Action.Read, User.name, ['role', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt']);
-      // it's used for check if a username or email is already in use
-      can(Action.Filter, User.name, ['username', 'email']);
-      // not logged user can create a new user
-      can(Action.Create, User.name);
-      // not logged user can't create a new user with these fields
-      cannot(Action.Create, User.name, ['role', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt']);
-    } else {
-      if (user.role == Role.ADMIN) {
-        // admin can read-write everything
-        can(Action.Manage, 'all');
-        // admin can filter everything
-        can(Action.Filter, 'all');
-      } else {
-        // logged user can read user fields
-        can(Action.Read, User.name);
-        // logged user can't read these user fields
-        cannot(Action.Read, User.name, ['lastVerifiedDate', 'verificationCode']);
-        // logged user can update or delete only his own user
-        can(Action.Update, User.name, { _id: user._id });
-        can(Action.Delete, User.name, { _id: user._id });
-        // logged user can't modify these fields
-        cannot(Action.Modify, User.name, ['role', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt']);
-      }
+    // PUBLIC
+
+    // Users
+    // '_id', 'username', 'email', 'role', 'avatar', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt', 'profile.name', 'profile.bio', 'profile.location', 'profile.url'
+    can(Action.Read, User.name, [
+      '_id',
+      'username',
+      'email',
+      'role',
+      'avatar',
+      'verified',
+      'createdAt',
+      'profile.name',
+      'profile.bio',
+      'profile.location',
+      'profile.url'
+    ]);
+    can(Action.Filter, User.name, ['username', 'email']);
+    can(Action.Create, User.name, [
+      'username',
+      'email',
+      'password',
+      'profile.name',
+      'profile.bio',
+      'profile.location',
+      'profile.url'
+    ]);
+
+    console.log('user', user?._id.toString());
+
+    // USER
+    if (user?.role == Role.USER) {
+      // Users
+      // '_id', 'username', 'email', 'role', 'avatar', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt', 'profile.name', 'profile.bio', 'profile.location', 'profile.url'
+
+      can(
+        Action.Modify,
+        User.name,
+        ['username', 'email', 'avatar', 'profile.name', 'profile.bio', 'profile.location', 'profile.url'],
+        { _id: user._id }
+      );
+
+      // Sessions
+      // '_id', 'user', 'token', 'blocked' ,'closed', 'createdAt', 'updatedAt', 'device.client', 'device.os', 'device.brand', 'device.model', 'device.type', 'device.bot', 'device.ip'
+
+      can(Action.Read, Session.name, [
+        '_id',
+        'token',
+        'blocked',
+        'closed',
+        'createdAt',
+        'updatedAt',
+        'device.client',
+        'device.os',
+        'device.brand',
+        'device.model',
+        'device.type',
+        'device.bot',
+        'device.ip',
+        'user._id'
+      ]);
+
+      console.log('user filter', { eq: user._id.toString() });
+
+      can(Action.Filter, Session.name, ['user'], { user: { eq: user._id.toString() } }); // casl can't compare json objects, this is a limitation that we have to deal with Prisma
+    }
+
+    // ADMIN
+    else if (user?.role == Role.ADMIN) {
+      can(Action.Manage, 'all');
+      can(Action.Filter, 'all');
     }
 
     return build({

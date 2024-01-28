@@ -38,15 +38,16 @@ export class AuthGuard implements CanActivate {
       context.getClass()
     ]);
 
-    // if the controller route is marked as public, we allow access
-    if (isPublic) {
-      return true;
-    }
-
     // in case that the controller route is not public we check the jwt token
     // get the token from the request header authorization
     const request = context.getContext().req;
     const token = this.sharedService.extractTokenFromHeader(request);
+
+    // if the controller route is marked as public and there's no provided token, we allow access but without user information
+    // this allow us to change the behavior of the route if the user is authenticated or not in the casl policies
+    if (!token && isPublic) {
+      return true;
+    }
 
     if (!token) throw new UnauthorizedException(this.errorMessage + 'authorization not found');
 

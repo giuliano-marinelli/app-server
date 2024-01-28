@@ -61,6 +61,8 @@ export class SharedService {
   getQuerySelectionsSetAsString(selections: readonly any[]): string[] {
     const fields: string[] = [];
 
+    if (!selections) return [];
+
     for (const selection of selections) {
       if (selection.kind === 'Field') {
         if (selection.selectionSet) {
@@ -85,15 +87,17 @@ export class SharedService {
   getFilterFieldsAsString(filter: any = {}): string[] {
     const fields: string[] = [];
 
+    if (!filter) return [];
+
     Object.keys(filter)?.forEach((field) => {
       if (
-        filter[field]?.eq ||
-        filter[field]?.ne ||
-        filter[field]?.gt ||
-        filter[field]?.gte ||
-        filter[field]?.lt ||
-        filter[field]?.lte ||
-        filter[field]?.like
+        filter[field]?.eq != null ||
+        filter[field]?.ne != null ||
+        filter[field]?.gt != null ||
+        filter[field]?.gte != null ||
+        filter[field]?.lt != null ||
+        filter[field]?.lte != null ||
+        filter[field]?.like != null
       ) {
         fields.push(field);
       } else {
@@ -102,5 +106,27 @@ export class SharedService {
     });
 
     return fields;
+  }
+
+  // convert fields object with sub objects in a one level fields object
+  // example: { _id: '65b41de0c641815f7ff5efdf', profile: { bio: 'something', phone: { number: 123456, area: 299} } }
+  // oneLevelFields = { _id: '65b41de0c641815f7ff5efdf', 'profile.bio': 'something', 'profile.phone.number': 123456, 'profile.phone.area': 299 }
+  getOneLevelFields(fields: any = {}): any {
+    const oneLevelFields: any = {};
+
+    if (!fields) return {};
+
+    Object.keys(fields)?.forEach((field) => {
+      if (typeof fields[field] == 'object') {
+        const subfields = this.getOneLevelFields(fields[field]);
+        Object.keys(subfields)?.forEach((subfield) => {
+          oneLevelFields[`${field}.${subfield}`] = subfields[subfield];
+        });
+      } else {
+        oneLevelFields[field] = fields[field];
+      }
+    });
+
+    return oneLevelFields;
   }
 }

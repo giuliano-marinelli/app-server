@@ -1,7 +1,10 @@
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 
+import { GraphQLObjectID } from 'graphql-scalars';
 import { Schema as MongooseSchema } from 'mongoose';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { Action } from 'src/casl/casl-ability.factory';
+import { CheckPolicies } from 'src/casl/decorators/casl.decorator';
 
 import { Session } from './entities/session.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -21,9 +24,14 @@ export class SessionsResolver {
   ) {}
 
   @Query(() => [Session], { name: 'sessions' })
+  @CheckPolicies((args) => ({
+    action: Action.Filter,
+    subject: Session.name,
+    fields: args.filter
+  }))
   async findAll(
     @Args('search', { nullable: true }) search: string,
-    @Args('filter', { nullable: true }) filter: FilterSessionInput,
+    @Args('filter', { nullable: false }) filter: FilterSessionInput,
     @Args('sort', { type: () => [SortInput], nullable: true }) sort: SortInput[],
     @Args('pagination', { nullable: true }) pagination: PaginationInput,
     @Args('optional', { defaultValue: false }) optional: boolean
@@ -32,7 +40,7 @@ export class SessionsResolver {
   }
 
   @Query(() => Session, { name: 'session' })
-  async findOne(@Args('id', { type: () => String }) id: MongooseSchema.Types.ObjectId) {
+  async findOne(@Args('id', { type: () => GraphQLObjectID }) id: MongooseSchema.Types.ObjectId) {
     return await this.sessionsService.findOne(id);
   }
 

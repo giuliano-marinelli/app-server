@@ -1,7 +1,8 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @ObjectType()
+@InputType('ProfileInput')
 @Schema({ _id: false })
 export class Profile {
   @Field({ nullable: true })

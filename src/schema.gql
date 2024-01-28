@@ -8,8 +8,8 @@ input BooleanFilterInput {
 }
 
 input CreateUserInput {
-  avatar: String
-  email: String!
+  avatar: URL
+  email: EmailAddress!
   password: String!
   profile: ProfileInput
   role: Role
@@ -39,6 +39,21 @@ type Device {
   os: String
   type: String
 }
+
+input DeviceInput {
+  bot: Boolean
+  brand: String
+  client: String
+  ip: String
+  model: String
+  os: String
+  type: String
+}
+
+"""
+A field whose value conforms to the standard internet email address format as specified in HTML Spec: https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address.
+"""
+scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
 
 input FilterDeviceInput {
   bot: BooleanFilterInput
@@ -85,9 +100,14 @@ input LoginInput {
 
 type Mutation {
   createUser(createUserInput: CreateUserInput!): User!
-  deleteUser(id: ID!): User!
+  deleteUser(id: ObjectID!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
 }
+
+"""
+A field whose value conforms with the standard mongodb object ID as described here: https://docs.mongodb.com/manual/reference/method/ObjectId/#ObjectId. Example: 5e5677d71bdc2ae76344968c
+"""
+scalar ObjectID
 
 input PaginationInput {
   count: Int!
@@ -111,9 +131,9 @@ input ProfileInput {
 type Query {
   """Login with username or email and password. Returns the token string."""
   login(loginInput: LoginInput!): String!
-  session(id: String!): Session!
-  sessions(filter: FilterSessionInput, optional: Boolean! = false, pagination: PaginationInput, search: String, sort: [SortInput!]): [Session!]!
-  user(id: String!): User!
+  session(id: ObjectID!): Session!
+  sessions(filter: FilterSessionInput!, optional: Boolean! = false, pagination: PaginationInput, search: String, sort: [SortInput!]): [Session!]!
+  user(id: ObjectID!): User!
   users(filter: FilterUserInput, optional: Boolean! = false, pagination: PaginationInput, search: String, sort: [SortInput!]): [User!]!
 }
 
@@ -127,11 +147,12 @@ enum Role {
 }
 
 type Session {
-  _id: ID!
+  _id: ObjectID!
   blocked: Boolean!
   closed: Boolean!
   createdAt: DateTime!
   device: Device
+  token: String!
   updatedAt: DateTime!
   user: User!
 }
@@ -147,10 +168,15 @@ input StringFilterInput {
   ne: String
 }
 
+"""
+A field whose value conforms to the standard URL format as specified in RFC3986: https://www.ietf.org/rfc/rfc3986.txt.
+"""
+scalar URL
+
 input UpdateUserInput {
-  _id: String!
-  avatar: String
-  email: String
+  _id: ObjectID!
+  avatar: URL
+  email: EmailAddress
   password: String
   profile: ProfileInput
   role: Role
@@ -158,12 +184,15 @@ input UpdateUserInput {
 }
 
 type User {
-  _id: ID!
-  avatar: String
+  _id: ObjectID!
+  avatar: URL
   createdAt: DateTime!
-  email: String!
+  email: EmailAddress!
+  lastVerifiedDate: DateTime
+  password: String!
   profile: Profile
-  role: Role!
+  role: Role
   username: String!
+  verificationCode: String
   verified: Boolean!
 }

@@ -1,22 +1,24 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
+import { GraphQLObjectID } from 'graphql-scalars';
 import { Schema as MongooseSchema } from 'mongoose';
 
 import { Device, DeviceSchema } from './device.entity';
 import { User } from 'src/users/entities/user.entity';
 
 @ObjectType()
+@InputType('SessionInput', { isAbstract: true })
 @Schema()
 export class Session {
-  @Field(() => ID)
+  @Field(() => GraphQLObjectID)
   _id: MongooseSchema.Types.ObjectId;
 
   @Field(() => User)
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: User.name })
   user: MongooseSchema.Types.ObjectId;
 
-  //   @Field()
+  @Field()
   @Prop({ unique: true })
   token: string;
 

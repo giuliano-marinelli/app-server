@@ -7,13 +7,14 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
+import { GraphQLEmailAddress, GraphQLObjectID, GraphQLURL } from 'graphql-scalars';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './casl/casl.module';
 import { SessionsModule } from './sessions/sessions.module';
-import { UsersModule } from './users/users.module';
 import { SharedModule } from './shared/shared.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -37,7 +38,12 @@ import { SharedModule } from './shared/shared.module';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
-      sortSchema: true
+      sortSchema: true,
+      resolvers: {
+        ObjectID: GraphQLObjectID,
+        EmailAddress: GraphQLEmailAddress,
+        URL: GraphQLURL
+      }
     }),
     AuthModule,
     CaslModule,
