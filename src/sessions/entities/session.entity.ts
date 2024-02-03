@@ -1,46 +1,63 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Field as GraphQLField, InputType as GraphQLInput, ObjectType as GraphQLObject } from '@nestjs/graphql';
+
+import {
+  Boolean,
+  DateTime,
+  Mongo as Db,
+  Default,
+  Fields,
+  Id,
+  ManyToOne,
+  Map,
+  Nullable,
+  Field as PrismaField,
+  Model as PrismaModel,
+  Relation as PrismaRelation,
+  References,
+  String,
+  Unique
+} from '@nestjs!/prisma';
 
 import { GraphQLObjectID } from 'graphql-scalars';
-import { Schema as MongooseSchema } from 'mongoose';
 
-import { Device, DeviceSchema } from './device.entity';
+import { Device } from './device.type';
+
 import { User } from 'src/users/entities/user.entity';
 
-@ObjectType()
-@InputType('SessionInput', { isAbstract: true })
-@Schema()
+@GraphQLObject()
+@GraphQLInput('SessionInput', { isAbstract: true })
+@PrismaModel()
 export class Session {
-  @Field(() => GraphQLObjectID)
-  _id: MongooseSchema.Types.ObjectId;
+  @GraphQLField(() => GraphQLObjectID)
+  @PrismaField(String(Id, Default('auto()'), Map('_id'), Db.ObjectId), { name: 'id' })
+  id: string;
 
-  @Field(() => User)
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: User.name })
-  user: MongooseSchema.Types.ObjectId;
+  @GraphQLField(() => User)
+  @PrismaField(String(Db.ObjectId), { name: 'userId' })
+  @PrismaRelation(User, (R) => ManyToOne(R, Fields('userId'), References('id')), { name: 'user' })
+  user: string;
 
-  @Field()
-  @Prop({ unique: true })
+  @GraphQLField()
+  @PrismaField(String(Unique))
   token: string;
 
-  @Field(() => Device, { nullable: true })
-  @Prop({ type: DeviceSchema, default: {} })
+  @GraphQLField(() => Device, { nullable: true })
+  @PrismaField(Device, (T) => T(Nullable, Default({})))
   device: Device;
 
-  @Field()
-  @Prop()
+  @GraphQLField()
+  @PrismaField(Boolean(Default(false)))
   blocked: boolean;
 
-  @Field()
-  @Prop()
+  @GraphQLField()
+  @PrismaField(Boolean(Default(false)))
   closed: boolean;
 
-  @Field()
-  @Prop()
+  @GraphQLField()
+  @PrismaField(DateTime(Default('now()')))
   createdAt: Date;
 
-  @Field()
-  @Prop()
+  @GraphQLField()
+  @PrismaField(DateTime(Default('now()')))
   updatedAt: Date;
 }
-
-export const SessionSchema = SchemaFactory.createForClass(Session);

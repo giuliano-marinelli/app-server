@@ -7,8 +7,9 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "prisma:generate": "prisma generate",
     "start": "nest start",
-    "start:dev": "nest start --watch",
+    "start:dev": "prisma generate && nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -21,6 +22,7 @@
   "dependencies": {
     "@apollo/server": "^4.10.0",
     "@casl/ability": "^6.5.0",
+    "@nestjs!/prisma": "^1.0.1",
     "@nestjs/apollo": "^12.0.11",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.1.1",
@@ -31,6 +33,7 @@
     "@nestjs/mongoose": "^10.0.2",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/serve-static": "^4.0.0",
+    "@prisma/client": "^5.8.1",
     "apollo-server-express": "^3.13.0",
     "bcryptjs": "^2.4.3",
     "class-validator": "^0.14.0",
@@ -38,6 +41,7 @@
     "graphql": "^16.8.1",
     "graphql-scalars": "^1.22.4",
     "mongoose": "^8.0.3",
+    "nestjs-prisma": "^0.22.0",
     "poly-crypto": "^2.0.6",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
@@ -58,6 +62,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "jest": "^29.5.0",
     "prettier": "^3.1.1",
+    "prisma": "^5.8.1",
     "source-map-support": "^0.5.21",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.0",

@@ -6,8 +6,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcryptjs';
 import * as DeviceDetector from 'device-detector-js';
 import { Model } from 'mongoose';
+import { Device } from 'src/sessions/entities/device.type';
 
-import { Device } from 'src/sessions/entities/device.entity';
 import { Session } from 'src/sessions/entities/session.entity';
 import { User } from 'src/users/entities/user.entity';
 

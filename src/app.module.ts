@@ -6,8 +6,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { PrismaModule } from '@nestjs!/prisma';
 
 import { GraphQLEmailAddress, GraphQLObjectID, GraphQLURL } from 'graphql-scalars';
+import { PrismaModule as PrismaConfigModule } from 'nestjs-prisma';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
@@ -22,6 +24,10 @@ import { UsersModule } from './users/users.module';
       envFilePath: '.development.env',
       isGlobal: true
     }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'app-client', 'dist', 'app-client', 'browser'),
+      exclude: ['/api/(.*)', '/graphql']
+    }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -29,10 +35,20 @@ import { UsersModule } from './users/users.module';
         uri: configService.get<string>('MONGODB_URI')
       })
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'app-client', 'dist', 'app-client', 'browser'),
-      exclude: ['/api/(.*)', '/graphql']
+    PrismaModule.forRoot({
+      autoSchemaFile: join(process.cwd(), 'prisma/schema.prisma'),
+      datasource: {
+        provider: 'mongodb',
+        url: 'env("DATABASE_URL")'
+      },
+      generators: [
+        {
+          name: 'client',
+          provider: 'prisma-client-js'
+        }
+      ]
     }),
+    PrismaConfigModule.forRoot(),
     GraphQLModule.forRoot({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),

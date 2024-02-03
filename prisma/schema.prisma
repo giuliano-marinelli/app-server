@@ -1,0 +1,55 @@
+// refract https://github.com/cwqt/refract - generated in 2.859 ms -----------------
+// datasource ----------------------------------------------------------------------
+
+datasource db {
+	provider  = "mongodb"
+	url       = env("DATABASE_URL")
+}
+
+// generators ----------------------------------------------------------------------
+
+generator client {
+	provider  = "prisma-client-js"
+}
+
+// enums ---------------------------------------------------------------------------
+
+// Defines wich permissions user has.
+enum Role {
+	// User role can access to application basic features.
+	USER @map("user")
+	// Admin role can access to all application features.
+	ADMIN @map("admin")
+}
+
+// types ---------------------------------------------------------------------------
+
+type Profile {
+	name      String
+	bio       String
+	location  String
+	url       String
+}
+
+// models --------------------------------------------------------------------------
+
+model User {
+	id                String     @id @default(auto()) @map("_id") @db.ObjectId
+	username          String?
+	email             String
+	password          String
+	role              Role       @default(USER)
+	avatar            String
+	verified          Boolean
+	lastVerifiedDate  DateTime
+	verificationCode  String
+	createdAt         DateTime
+	profile           Profile?
+	sessions          Session[]
+}
+
+model Session {
+	id      String  @id @default(auto()) @map("_id") @db.ObjectId
+	userId  String  @db.ObjectId
+	user    User    @relation(fields: [userId], references: [id])
+}

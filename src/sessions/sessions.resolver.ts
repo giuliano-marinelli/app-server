@@ -1,8 +1,7 @@
-import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { Args, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 
 import { GraphQLObjectID } from 'graphql-scalars';
 import { Schema as MongooseSchema } from 'mongoose';
-import { Public } from 'src/auth/decorators/public.decorator';
 import { Action } from 'src/casl/casl-ability.factory';
 import { CheckPolicies } from 'src/casl/decorators/casl.decorator';
 

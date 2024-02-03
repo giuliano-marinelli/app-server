@@ -4,8 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 
 import { Model } from 'mongoose';
 import { PolyAES } from 'poly-crypto';
-
-import { Device } from 'src/sessions/entities/device.entity';
+import { Device } from 'src/sessions/entities/device.type';
 
 @Injectable()
 export class SharedService {

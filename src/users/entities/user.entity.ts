@@ -1,27 +1,42 @@
 import {
-  Field,
-  InputType,
+  Field as GraphQLField,
+  InputType as GraphQLInput,
+  ObjectType as GraphQLObject,
   IntersectionType,
-  ObjectType,
   OmitType,
   PartialType,
   PickType,
-  registerEnumType
+  registerEnumType as registerGraphQLEnum
 } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
-import { MaxLength, MinLength } from 'class-validator';
+import {
+  Boolean,
+  DateTime,
+  Mongo as Db,
+  Default,
+  Id,
+  Map,
+  Nullable,
+  OneToMany,
+  Field as PrismaField,
+  Model as PrismaModel,
+  Relation as PrismaRelation,
+  String,
+  Unique,
+  registerEnum as registerPrismaEnum
+} from '@nestjs!/prisma';
+
+import { IsLowercase, MaxLength, MinLength } from 'class-validator';
 import { GraphQLEmailAddress, GraphQLObjectID, GraphQLURL } from 'graphql-scalars';
-import { Schema as MongooseSchema } from 'mongoose';
 
-import { Profile, ProfileSchema } from './profile.entity';
+import { Profile } from './profile.type';
 
 export enum Role {
   USER = 'user',
   ADMIN = 'admin'
 }
 
-registerEnumType(Role, {
+const RoleOptions = {
   name: 'Role',
   description: 'Defines wich permissions user has.',
   valuesMap: {
@@ -32,83 +47,78 @@ registerEnumType(Role, {
       description: 'Admin role can access to all application features.'
     }
   }
-});
+};
 
-@ObjectType()
-@InputType('UserInput', { isAbstract: true })
-@Schema()
+registerGraphQLEnum(Role, RoleOptions);
+
+registerPrismaEnum(Role, RoleOptions);
+
+@GraphQLObject()
+@GraphQLInput('UserInput', { isAbstract: true })
+@PrismaModel()
 export class User {
-  @Field(() => GraphQLObjectID)
-  _id: MongooseSchema.Types.ObjectId;
+  @GraphQLField(() => GraphQLObjectID)
+  @PrismaField(String(Id, Default('auto()'), Map('_id'), Db.ObjectId), { name: 'id' })
+  id: string;
 
-  @Field()
+  @GraphQLField()
+  @PrismaField(String(Unique))
   @MinLength(4)
   @MaxLength(30)
-  @Prop({
-    unique: true,
-    required: true,
-    minLength: 4,
-    maxLength: 30
-  })
   username: string;
 
-  @Field(() => GraphQLEmailAddress)
+  @GraphQLField(() => GraphQLEmailAddress)
+  @PrismaField(String(Unique))
   @MaxLength(100)
-  @Prop({
-    unique: true,
-    required: true,
-    lowercase: true,
-    trim: true
-  })
+  @IsLowercase()
   email: string;
 
-  @Field()
+  @GraphQLField()
+  @PrismaField()
   @MaxLength(100)
-  @Prop({
-    required: true
-  })
   password: string;
 
-  @Field(() => Role, { nullable: true })
-  @Prop({ default: Role.USER })
+  @GraphQLField(() => Role, { nullable: true })
+  @PrismaField(Role, (T) => T(Default('USER')))
   role: Role;
 
-  @Field(() => GraphQLURL, { nullable: true })
-  @Prop()
+  @GraphQLField(() => GraphQLURL, { nullable: true })
+  @PrismaField()
   avatar: string;
 
-  @Field({ defaultValue: false })
-  @Prop({ default: false })
+  @GraphQLField({ defaultValue: false })
+  @PrismaField(Boolean(Default(false)))
   verified: boolean;
 
-  @Field({ nullable: true })
-  @Prop()
+  @GraphQLField({ nullable: true })
+  @PrismaField(DateTime(Nullable))
   lastVerifiedDate: Date;
 
-  @Field({ nullable: true })
-  @Prop()
+  @GraphQLField({ nullable: true })
+  @PrismaField(String(Nullable))
   verificationCode: string;
 
-  @Field({ defaultValue: new Date() })
-  @Prop({ default: new Date() })
+  @GraphQLField({ defaultValue: new Date() })
+  @PrismaField(DateTime(Default('now()')))
   createdAt: Date;
 
-  @Field(() => Profile, { nullable: true })
-  @Prop({ type: ProfileSchema, default: {} })
+  @GraphQLField(() => Profile, { nullable: true })
+  @PrismaField(Profile, (T) => T(Nullable, Default({})))
   profile: Profile;
+
+  @PrismaRelation('Session', (R) => OneToMany(R))
+  sessions: [];
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
-
-@InputType()
+@GraphQLInput()
 export class CreateUserInput extends OmitType(
   User,
-  ['_id', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt'],
-  InputType
+  ['id', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt'],
+  GraphQLInput
 ) {}
 
-@InputType()
+@GraphQLInput()
 export class UpdateUserInput extends IntersectionType(
   PartialType(CreateUserInput),
-  PickType(User, ['_id'], InputType)
+  PickType(User, ['id'], GraphQLInput)
 ) {}
