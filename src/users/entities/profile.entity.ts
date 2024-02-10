@@ -1,25 +1,37 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+
+import { GraphQLURL } from 'graphql-scalars';
+import { FilterField, FilterWhereType } from 'src/common/search/search';
+import { Column } from 'typeorm';
 
 @ObjectType()
-@InputType('ProfileInput')
-@Schema({ _id: false })
+@InputType('ProfileInput', { isAbstract: true })
 export class Profile {
+  @Field(() => GraphQLURL, { nullable: true })
+  @FilterField()
+  @Column({ nullable: true })
+  avatar: string;
+
   @Field({ nullable: true })
-  @Prop()
+  @FilterField()
+  @Column({ nullable: true })
   name: string;
 
   @Field({ nullable: true })
-  @Prop()
+  @FilterField()
+  @Column({ nullable: true })
   bio: string;
 
   @Field({ nullable: true })
-  @Prop()
+  @FilterField()
+  @Column({ nullable: true })
   location: string;
 
   @Field({ nullable: true })
-  @Prop()
+  @FilterField()
+  @Column({ nullable: true })
   url: string;
 }
 
-export const ProfileSchema = SchemaFactory.createForClass(Profile);
+@FilterWhereType(Profile)
+export class ProfileFilterInput {}

@@ -1,51 +1,53 @@
-import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 
-import { GraphQLObjectID } from 'graphql-scalars';
-import { Schema as MongooseSchema } from 'mongoose';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { GraphQLUUID } from 'graphql-scalars';
 import { Action } from 'src/casl/casl-ability.factory';
 import { CheckPolicies } from 'src/casl/decorators/casl.decorator';
+import { TypeORMOrderTransform, TypeORMWhereTransform } from 'src/common/search/search';
+import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
-import { Session } from './entities/session.entity';
-import { User } from 'src/users/entities/user.entity';
+import { CloseSessionInput, Session, SessionOrderInput, SessionWhereInput } from './entities/session.entity';
 
-import { FilterSessionInput } from './dto/filter-session.input';
-import { PaginationInput } from 'src/search/dto/pagination.input';
-import { SortInput } from 'src/search/dto/sort.input';
+import { PaginationInput } from 'src/common/search/pagination.input';
 
 import { SessionsService } from './sessions.service';
-import { UsersService } from 'src/users/users.service';
 
 @Resolver(() => Session)
 export class SessionsResolver {
-  constructor(
-    private readonly sessionsService: SessionsService,
-    private readonly usersService: UsersService
-  ) {}
+  constructor(private readonly sessionsService: SessionsService) {}
 
-  @Query(() => [Session], { name: 'sessions' })
+  @CheckPolicies((args) => ({
+    action: Action.Update,
+    subject: Session.name,
+    fields: args.closeSessionInput
+  }))
+  @Mutation(() => Session, { nullable: true })
+  async closeSession(@Args('closeSessionInput') closeSessionInput: CloseSessionInput) {
+    return await this.sessionsService.closeSession(closeSessionInput);
+  }
+
+  @CheckPolicies(() => ({
+    action: Action.Read,
+    subject: Session.name
+  }))
+  @Query(() => Session, { name: 'session', nullable: true })
+  async findOne(@Args('id', { type: () => GraphQLUUID }) id: string, @Context() context) {
+    return await this.sessionsService.findOne(id, context?.req?.user);
+  }
+
   @CheckPolicies((args) => ({
     action: Action.Filter,
     subject: Session.name,
-    fields: args.filter
+    fields: args.where
   }))
+  @Query(() => [Session], { name: 'sessions', nullable: 'items' })
   async findAll(
-    @Args('search', { nullable: true }) search: string,
-    @Args('filter', { nullable: false }) filter: FilterSessionInput,
-    @Args('sort', { type: () => [SortInput], nullable: true }) sort: SortInput[],
-    @Args('pagination', { nullable: true }) pagination: PaginationInput,
-    @Args('optional', { defaultValue: false }) optional: boolean
+    @Args('where', { type: () => [SessionWhereInput], nullable: true }, TypeORMWhereTransform<Session>)
+    where: FindOptionsWhere<Session>,
+    @Args('order', { type: () => [SessionOrderInput], nullable: true }, TypeORMOrderTransform<Session>)
+    order: FindOptionsOrder<Session>,
+    @Args('pagination', { nullable: true }) pagination: PaginationInput
   ) {
-    return await this.sessionsService.findAll({ search, filter, sort, pagination, optional });
-  }
-
-  @Query(() => Session, { name: 'session' })
-  async findOne(@Args('id', { type: () => GraphQLObjectID }) id: MongooseSchema.Types.ObjectId) {
-    return await this.sessionsService.findOne(id);
-  }
-
-  @ResolveField(() => User)
-  async user(@Parent() session: Session) {
-    return await this.usersService.findOne(session.user);
+    return await this.sessionsService.findAll({ where, order, pagination });
   }
 }

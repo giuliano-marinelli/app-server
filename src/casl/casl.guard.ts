@@ -7,7 +7,7 @@ import { subject as CaslSubject } from '@casl/ability';
 import { Action, CaslAbilityFactory } from './casl-ability.factory';
 import { CHECK_POLICIES_KEY, Policy } from './decorators/casl.decorator';
 
-import { SharedService } from 'src/shared/shared.service';
+import { SharedService } from 'src/common/shared/shared.service';
 
 @Injectable()
 export class PoliciesGuard implements CanActivate {
@@ -34,20 +34,24 @@ export class PoliciesGuard implements CanActivate {
 
     const info = context.getInfo();
 
-    console.log('args', args);
+    // console.log('args', args);
 
     // get the selections set as a array of string
     // sub selections set are showed as parent.child
     // example: user { name, email, sessions { _id, ip } }
     // selectionsSet = ['name', 'email', 'sessions._id', 'sessions.ip']
-    const selectionsSet = this.sharedService.getQuerySelectionsSetAsString(info.fieldNodes[0].selectionSet.selections);
+    const selectionsSet = this.sharedService.getQuerySelectionsSetAsString(
+      info.fieldNodes[0]?.selectionSet?.selections
+    );
 
     // check if user has permission to do the action of each policy
     policyHandlers.forEach((policy) => {
       // get the policy action, subject and fields
       const { action, subject, fields } = policy(args, selectionsSet);
 
-      console.log('selectionsSet', selectionsSet);
+      //   console.log({ action, subject, fields });
+
+      //   console.log('selectionsSet', selectionsSet);
 
       // always check if user has permission to read the selections set that is asking for
       // we have to do it here because we need to know the subject wich comes in the policy
@@ -65,7 +69,7 @@ export class PoliciesGuard implements CanActivate {
         // sub filter fields are showed as parent.child
         const filterFields = this.sharedService.getFilterFieldsAsString(fields);
 
-        console.log('fields', fields);
+        // console.log('fields', fields);
         console.log('filterFields', filterFields);
 
         // check if user has permission to do the filtering with the filter fields

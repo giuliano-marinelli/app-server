@@ -2,33 +2,49 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-input BooleanFilterInput {
+input BooleanWhereInput {
+  and: [BooleanWhereInput!]
   eq: Boolean
   ne: Boolean
+  not: BooleanWhereInput
+  or: [BooleanWhereInput!]
+}
+
+input CloseSessionInput {
+  id: UUID!
+  user: UserInput
 }
 
 input CreateUserInput {
-  avatar: URL
   email: EmailAddress!
+  lastVerificationTry: DateTime
   password: String!
   profile: ProfileInput
   role: Role
   username: String!
-}
-
-input DateFilterInput {
-  eq: DateTime
-  gt: DateTime
-  gte: DateTime
-  lt: DateTime
-  lte: DateTime
-  ne: DateTime
+  verificationCode: String
+  verified: Boolean
 }
 
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+input DateTimeWhereInput {
+  and: [DateTimeWhereInput!]
+  any: [DateTime!]
+  between: [DateTime!]
+  eq: DateTime
+  gt: DateTime
+  gte: DateTime
+  in: [DateTime!]
+  lt: DateTime
+  lte: DateTime
+  ne: DateTime
+  not: DateTimeWhereInput
+  or: [DateTimeWhereInput!]
+}
 
 type Device {
   bot: Boolean
@@ -38,6 +54,17 @@ type Device {
   model: String
   os: String
   type: String
+}
+
+""""""
+input DeviceFilterInput {
+  bot: BooleanWhereInput
+  brand: StringWhereInput
+  client: StringWhereInput
+  ip: StringWhereInput
+  model: StringWhereInput
+  os: StringWhereInput
+  type: StringWhereInput
 }
 
 input DeviceInput {
@@ -55,59 +82,26 @@ A field whose value conforms to the standard internet email address format as sp
 """
 scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
 
-input FilterDeviceInput {
-  bot: BooleanFilterInput
-  brand: StringFilterInput
-  client: StringFilterInput
-  ip: StringFilterInput
-  model: StringFilterInput
-  os: StringFilterInput
-  type: StringFilterInput
-}
-
-input FilterProfileInput {
-  bio: StringFilterInput
-  location: StringFilterInput
-  name: StringFilterInput
-  url: StringFilterInput
-}
-
-input FilterSessionInput {
-  blocked: BooleanFilterInput
-  closed: BooleanFilterInput
-  createdAt: DateFilterInput
-  device: FilterDeviceInput
-  token: StringFilterInput
-  updatedAt: DateFilterInput
-  user: StringFilterInput
-}
-
-input FilterUserInput {
-  createdAt: DateFilterInput
-  email: StringFilterInput
-  lastVerifiedDate: DateFilterInput
-  profile: FilterProfileInput
-  role: StringFilterInput
-  username: StringFilterInput
-  verificationCode: StringFilterInput
-  verified: BooleanFilterInput
-}
-
 input LoginInput {
   password: String!
   usernameOrEmail: String!
 }
 
 type Mutation {
-  createUser(createUserInput: CreateUserInput!): User!
-  deleteUser(id: ObjectID!): User!
-  updateUser(updateUserInput: UpdateUserInput!): User!
+  closeSession(closeSessionInput: CloseSessionInput!): Session
+  createUser(createUserInput: CreateUserInput!): User
+  deleteUser(id: UUID!): UUID!
+  updateUser(updateUserInput: UpdateUserInput!): User
 }
 
-"""
-A field whose value conforms with the standard mongodb object ID as described here: https://docs.mongodb.com/manual/reference/method/ObjectId/#ObjectId. Example: 5e5677d71bdc2ae76344968c
-"""
-scalar ObjectID
+"""Defines the order direction."""
+enum OrderDirection {
+  """Ascending order."""
+  ASC
+
+  """Descending order."""
+  DESC
+}
 
 input PaginationInput {
   count: Int!
@@ -115,13 +109,24 @@ input PaginationInput {
 }
 
 type Profile {
+  avatar: URL
   bio: String
   location: String
   name: String
   url: String
 }
 
+""""""
+input ProfileFilterInput {
+  avatar: StringWhereInput
+  bio: StringWhereInput
+  location: StringWhereInput
+  name: StringWhereInput
+  url: StringWhereInput
+}
+
 input ProfileInput {
+  avatar: URL
   bio: String
   location: String
   name: String
@@ -131,10 +136,10 @@ input ProfileInput {
 type Query {
   """Login with username or email and password. Returns the token string."""
   login(loginInput: LoginInput!): String!
-  session(id: ObjectID!): Session!
-  sessions(filter: FilterSessionInput!, optional: Boolean! = false, pagination: PaginationInput, search: String, sort: [SortInput!]): [Session!]!
-  user(id: ObjectID!): User!
-  users(filter: FilterUserInput, optional: Boolean! = false, pagination: PaginationInput, search: String, sort: [SortInput!]): [User!]!
+  session(id: UUID!): Session
+  sessions(order: [SessionOrderInput!], pagination: PaginationInput, where: [SessionWhereInput!]): [Session]!
+  user(id: UUID!): User
+  users(order: [UserOrderInput!], pagination: PaginationInput, where: [UserWhereInput!]): [User]!
 }
 
 """Defines wich permissions user has."""
@@ -147,25 +152,63 @@ enum Role {
 }
 
 type Session {
-  _id: ObjectID!
-  blocked: Boolean!
-  closed: Boolean!
+  blockedAt: DateTime
+  closedAt: DateTime
   createdAt: DateTime!
   device: Device
+  id: UUID!
+  lastActivity: DateTime!
   token: String!
   updatedAt: DateTime!
-  user: User!
+  user: User
 }
 
-input SortInput {
-  by: String!
-  direction: String!
+input SessionInput {
+  blockedAt: DateTime
+  closedAt: DateTime
+  createdAt: DateTime!
+  device: DeviceInput
+  id: UUID!
+  lastActivity: DateTime! = "2024-02-10T08:16:25.101Z"
+  token: String!
+  updatedAt: DateTime!
+  user: UserInput
 }
 
-input StringFilterInput {
+""""""
+input SessionOrderInput {
+  blockedAt: OrderDirection
+  closedAt: OrderDirection
+  createdAt: OrderDirection
+  device: OrderDirection
+  lastActivity: OrderDirection
+  token: OrderDirection
+  updatedAt: OrderDirection
+  user: OrderDirection
+}
+
+""""""
+input SessionWhereInput {
+  blockedAt: DateTimeWhereInput
+  closedAt: DateTimeWhereInput
+  createdAt: DateTimeWhereInput
+  device: DeviceFilterInput
+  lastActivity: DateTimeWhereInput
+  token: StringWhereInput
+  updatedAt: DateTimeWhereInput
+  user: UserWhereInput
+}
+
+input StringWhereInput {
+  and: [StringWhereInput!]
+  any: [String!]
   eq: String
+  ilike: String
+  in: [String!]
   like: String
   ne: String
+  not: StringWhereInput
+  or: [StringWhereInput!]
 }
 
 """
@@ -173,26 +216,79 @@ A field whose value conforms to the standard URL format as specified in RFC3986:
 """
 scalar URL
 
+"""
+A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
+"""
+scalar UUID
+
 input UpdateUserInput {
-  _id: ObjectID!
-  avatar: URL
   email: EmailAddress
+  id: UUID!
+  lastVerificationTry: DateTime
   password: String
   profile: ProfileInput
   role: Role
   username: String
+  verificationCode: String
+  verified: Boolean
 }
 
 type User {
-  _id: ObjectID!
-  avatar: URL
   createdAt: DateTime!
+  deletedAt: DateTime
   email: EmailAddress!
-  lastVerifiedDate: DateTime
+  id: UUID!
+  lastVerificationTry: DateTime
   password: String!
   profile: Profile
   role: Role
+  sessions: [Session!]
+  updatedAt: DateTime!
   username: String!
   verificationCode: String
-  verified: Boolean!
+  verified: Boolean
+}
+
+input UserInput {
+  createdAt: DateTime!
+  deletedAt: DateTime
+  email: EmailAddress!
+  id: UUID!
+  lastVerificationTry: DateTime
+  password: String!
+  profile: ProfileInput
+  role: Role
+  sessions: [SessionInput!]
+  updatedAt: DateTime!
+  username: String!
+  verificationCode: String
+  verified: Boolean
+}
+
+""""""
+input UserOrderInput {
+  createdAt: OrderDirection
+  deletedAt: OrderDirection
+  email: OrderDirection
+  lastVerificationTry: OrderDirection
+  profile: OrderDirection
+  role: OrderDirection
+  updatedAt: OrderDirection
+  username: OrderDirection
+  verificationCode: OrderDirection
+  verified: OrderDirection
+}
+
+""""""
+input UserWhereInput {
+  createdAt: DateTimeWhereInput
+  deletedAt: DateTimeWhereInput
+  email: StringWhereInput
+  lastVerificationTry: DateTimeWhereInput
+  profile: ProfileFilterInput
+  role: StringWhereInput
+  updatedAt: DateTimeWhereInput
+  username: StringWhereInput
+  verificationCode: StringWhereInput
+  verified: BooleanWhereInput
 }

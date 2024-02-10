@@ -18,7 +18,7 @@ export enum Action {
 @Injectable()
 export class CaslAbilityFactory {
   createForUser(user: User) {
-    const { can, cannot, build } = new AbilityBuilder(createMongoAbility);
+    const { can: allow, cannot: forbid, build } = new AbilityBuilder(createMongoAbility);
 
     const resolveAction = createAliasResolver({
       filter: ['read'], // filter action includes read action but not vice versa
@@ -29,74 +29,39 @@ export class CaslAbilityFactory {
     // PUBLIC
 
     // Users
-    // '_id', 'username', 'email', 'role', 'avatar', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt', 'profile.name', 'profile.bio', 'profile.location', 'profile.url'
-    can(Action.Read, User.name, [
-      '_id',
-      'username',
-      'email',
-      'role',
-      'avatar',
-      'verified',
-      'createdAt',
-      'profile.name',
-      'profile.bio',
-      'profile.location',
-      'profile.url'
-    ]);
-    can(Action.Filter, User.name, ['username', 'email']);
-    can(Action.Create, User.name, [
-      'username',
-      'email',
-      'password',
-      'profile.name',
-      'profile.bio',
-      'profile.location',
-      'profile.url'
-    ]);
+    allow(Action.Read, User.name);
+    forbid(Action.Read, User.name, ['password', 'verificationCode', 'lastVerificationTry', 'sessions']);
+    allow(Action.Filter, User.name, ['username', 'email']);
+    // allow(Action.Filter, User.name);
+    allow(Action.Create, User.name, ['username', 'email', 'password']);
 
-    console.log('user', user?._id.toString());
+    console.log('logged user', user?.id.toString());
 
     // USER
     if (user?.role == Role.USER) {
       // Users
-      // '_id', 'username', 'email', 'role', 'avatar', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt', 'profile.name', 'profile.bio', 'profile.location', 'profile.url'
-
-      can(
-        Action.Modify,
-        User.name,
-        ['username', 'email', 'avatar', 'profile.name', 'profile.bio', 'profile.location', 'profile.url'],
-        { _id: user._id }
-      );
-
-      // Sessions
-      // '_id', 'user', 'token', 'blocked' ,'closed', 'createdAt', 'updatedAt', 'device.client', 'device.os', 'device.brand', 'device.model', 'device.type', 'device.bot', 'device.ip'
-
-      can(Action.Read, Session.name, [
-        '_id',
-        'token',
-        'blocked',
-        'closed',
+      allow(Action.Modify, User.name, { id: user.id });
+      forbid(Action.Modify, User.name, [
+        'role',
+        'verified',
+        'verificationCode',
+        'lastVerificationTry',
         'createdAt',
         'updatedAt',
-        'device.client',
-        'device.os',
-        'device.brand',
-        'device.model',
-        'device.type',
-        'device.bot',
-        'device.ip',
-        'user._id'
+        'deletedAt',
+        'sessions'
       ]);
 
-      console.log('user filter', { eq: user._id.toString() });
-
-      can(Action.Filter, Session.name, ['user'], { user: { eq: user._id.toString() } }); // casl can't compare json objects, this is a limitation that we have to deal with Prisma
+      // Sessions
+      allow(Action.Read, Session.name);
+      forbid(Action.Read, Session.name, ['token']);
+      allow(Action.Filter, Session.name, ['user.username', 'device.client', 'createdAt', 'updatedAt', 'deletedAt']);
     }
 
     // ADMIN
     else if (user?.role == Role.ADMIN) {
-      can(Action.Manage, 'all');
-      can(Action.Filter, 'all');
+      allow(Action.Manage, 'all');
+      allow(Action.Filter, 'all');
     }
 
     return build({

@@ -1,46 +1,66 @@
-import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
 
-import { GraphQLObjectID } from 'graphql-scalars';
-import { Schema as MongooseSchema } from 'mongoose';
+import { GraphQLUUID } from 'graphql-scalars';
+import { FilterField, FilterOrderType, FilterWhereType } from 'src/common/search/search';
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-import { Device, DeviceSchema } from './device.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Device, DeviceFilterInput } from './device.entity';
+import { User, UserWhereInput } from 'src/users/entities/user.entity';
 
 @ObjectType()
 @InputType('SessionInput', { isAbstract: true })
-@Schema()
+@Entity()
 export class Session {
-  @Field(() => GraphQLObjectID)
-  _id: MongooseSchema.Types.ObjectId;
+  @Field(() => GraphQLUUID)
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Field(() => User)
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: User.name })
-  user: MongooseSchema.Types.ObjectId;
+  @Field(() => User, { nullable: true })
+  @FilterField(() => UserWhereInput)
+  @ManyToOne(() => User, (user) => user.sessions)
+  user: User;
 
   @Field()
-  @Prop({ unique: true })
+  @FilterField()
+  @Column()
   token: string;
 
   @Field(() => Device, { nullable: true })
-  @Prop({ type: DeviceSchema, default: {} })
+  @FilterField(() => DeviceFilterInput)
+  @Column(() => Device)
   device: Device;
 
-  @Field()
-  @Prop()
-  blocked: boolean;
+  @Field({ defaultValue: new Date() })
+  @FilterField()
+  @Column({ default: new Date() })
+  lastActivity: Date;
+
+  @Field({ nullable: true })
+  @FilterField()
+  @Column({ nullable: true })
+  blockedAt: Date;
+
+  @Field({ nullable: true })
+  @FilterField()
+  @Column({ nullable: true })
+  closedAt: Date;
 
   @Field()
-  @Prop()
-  closed: boolean;
-
-  @Field()
-  @Prop()
+  @FilterField()
+  @CreateDateColumn()
   createdAt: Date;
 
   @Field()
-  @Prop()
+  @FilterField()
+  @UpdateDateColumn()
   updatedAt: Date;
 }
 
-export const SessionSchema = SchemaFactory.createForClass(Session);
+@InputType()
+export class CloseSessionInput extends PickType(Session, ['id', 'user'], InputType) {}
+
+@FilterWhereType(Session)
+export class SessionWhereInput {}
+
+@FilterOrderType(Session)
+export class SessionOrderInput {}

@@ -8,13 +8,23 @@ import {
   PickType,
   registerEnumType
 } from '@nestjs/graphql';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
-import { MaxLength, MinLength } from 'class-validator';
-import { GraphQLEmailAddress, GraphQLObjectID, GraphQLURL } from 'graphql-scalars';
-import { Schema as MongooseSchema } from 'mongoose';
+import { IsEmail, MaxLength, MinLength } from 'class-validator';
+import { GraphQLEmailAddress, GraphQLUUID } from 'graphql-scalars';
+import { FilterField, FilterOrderType, FilterWhereType } from 'src/common/search/search';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  Unique,
+  UpdateDateColumn
+} from 'typeorm';
 
-import { Profile, ProfileSchema } from './profile.entity';
+import { Profile, ProfileFilterInput } from './profile.entity';
+import { Session } from 'src/sessions/entities/session.entity';
 
 export enum Role {
   USER = 'user',
@@ -36,79 +46,94 @@ registerEnumType(Role, {
 
 @ObjectType()
 @InputType('UserInput', { isAbstract: true })
-@Schema()
+@Entity()
 export class User {
-  @Field(() => GraphQLObjectID)
-  _id: MongooseSchema.Types.ObjectId;
+  @Field(() => GraphQLUUID)
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Field()
+  @FilterField()
+  @Column()
+  @Unique(['username'])
   @MinLength(4)
   @MaxLength(30)
-  @Prop({
-    unique: true,
-    required: true,
-    minLength: 4,
-    maxLength: 30
-  })
   username: string;
 
   @Field(() => GraphQLEmailAddress)
+  @FilterField()
+  @Column() // lowercase: true, trim: true
+  @Unique(['email'])
+  @IsEmail()
   @MaxLength(100)
-  @Prop({
-    unique: true,
-    required: true,
-    lowercase: true,
-    trim: true
-  })
   email: string;
 
   @Field()
+  @Column()
+  @MinLength(8)
   @MaxLength(100)
-  @Prop({
-    required: true
-  })
   password: string;
 
   @Field(() => Role, { nullable: true })
-  @Prop({ default: Role.USER })
+  @FilterField()
+  @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
 
-  @Field(() => GraphQLURL, { nullable: true })
-  @Prop()
-  avatar: string;
+  @Field(() => Profile, { nullable: true })
+  @FilterField(() => ProfileFilterInput)
+  @Column(() => Profile)
+  profile: Profile;
 
-  @Field({ defaultValue: false })
-  @Prop({ default: false })
+  @Field({ nullable: true })
+  @FilterField()
+  @Column({ default: false })
   verified: boolean;
 
   @Field({ nullable: true })
-  @Prop()
-  lastVerifiedDate: Date;
-
-  @Field({ nullable: true })
-  @Prop()
+  @FilterField()
+  @Column({ nullable: true })
   verificationCode: string;
 
-  @Field({ defaultValue: new Date() })
-  @Prop({ default: new Date() })
+  @Field({ nullable: true })
+  @FilterField()
+  @Column({ nullable: true })
+  lastVerificationTry: Date;
+
+  @Field()
+  @FilterField()
+  @CreateDateColumn()
   createdAt: Date;
 
-  @Field(() => Profile, { nullable: true })
-  @Prop({ type: ProfileSchema, default: {} })
-  profile: Profile;
-}
+  @Field()
+  @FilterField()
+  @UpdateDateColumn()
+  updatedAt: Date;
 
-export const UserSchema = SchemaFactory.createForClass(User);
+  @Field({ nullable: true })
+  @FilterField()
+  @DeleteDateColumn()
+  deletedAt: Date;
+
+  @Field(() => [Session], { nullable: true })
+  @OneToMany(() => Session, (session) => session.user, { cascade: true })
+  sessions: Session[];
+}
 
 @InputType()
 export class CreateUserInput extends OmitType(
   User,
-  ['_id', 'verified', 'lastVerifiedDate', 'verificationCode', 'createdAt'],
+  ['id', 'createdAt', 'updatedAt', 'deletedAt', 'sessions'],
   InputType
 ) {}
 
 @InputType()
 export class UpdateUserInput extends IntersectionType(
   PartialType(CreateUserInput),
-  PickType(User, ['_id'], InputType)
+  PickType(User, ['id'], InputType)
 ) {}
+
+@FilterWhereType(User)
+export class UserWhereInput {}
+
+@FilterOrderType(User)
+export class UserOrderInput {}

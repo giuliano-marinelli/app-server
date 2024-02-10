@@ -3,17 +3,18 @@ import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
 
 import * as _ from 'lodash';
-import { Model } from 'mongoose';
+import { Repository } from 'typeorm';
+import * as validateUUID from 'uuid-validate';
 
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
 
 import { Session } from 'src/sessions/entities/session.entity';
 import { User } from 'src/users/entities/user.entity';
 
-import { SharedService } from 'src/shared/shared.service';
+import { SharedService } from 'src/common/shared/shared.service';
 
 import DeviceDetector = require('device-detector-js');
 
@@ -24,8 +25,10 @@ export class AuthGuard implements CanActivate {
     private reflector: Reflector,
     private configService: ConfigService,
     private sharedService: SharedService,
-    @InjectModel(User.name) private readonly userModel: Model<User>,
-    @InjectModel(Session.name) private readonly sessionModel: Model<Session>
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+    @InjectRepository(Session)
+    private sessionsRepository: Repository<Session>
   ) {}
 
   private errorMessage: string = 'Failed authentication: ';
@@ -57,18 +60,21 @@ export class AuthGuard implements CanActivate {
     });
 
     // check if token has user id and device
-    if (!decodedToken?.id || !decodedToken?.device)
+    if (!decodedToken?.id || !decodedToken?.device || !validateUUID(decodedToken?.id))
       throw new UnauthorizedException(this.errorMessage + 'invalid token');
 
     // find user with token user id
-    const user = await this.userModel.findOne({ _id: decodedToken.id });
+    const user = await this.usersRepository.findOne({
+      relations: { sessions: true },
+      where: { id: decodedToken.id }
+    });
     if (!user) throw new UnauthorizedException(this.errorMessage + 'user not found');
 
     // find session with same token
-    const session = await this.sessionModel.findOne({ token: token });
+    const session = await this.sessionsRepository.findOneBy({ token: token });
     if (!session) throw new UnauthorizedException(this.errorMessage + 'session not found');
-    if (session.closed) throw new UnauthorizedException(this.errorMessage + 'session is closed');
-    if (session.blocked) throw new UnauthorizedException(this.errorMessage + 'session is blocked');
+    if (session.closedAt) throw new UnauthorizedException(this.errorMessage + 'session is closed');
+    if (session.blockedAt) throw new UnauthorizedException(this.errorMessage + 'session is blocked');
 
     // detect the device from request header user-agent
     const deviceDetector = new DeviceDetector();
@@ -83,7 +89,7 @@ export class AuthGuard implements CanActivate {
     // here we check detected device is equal to the device in jwt token
     // if it's not equal we block the session
     if (JSON.stringify(detectedDevice) != JSON.stringify(decryptedDevice)) {
-      await this.sessionModel.updateMany({ token: token }, { blocked: true });
+      await this.sessionsRepository.update({ token: token }, { blockedAt: new Date() });
 
       // HERE WE HAVE TO NOTIFY WITH EMAIL OR PUSH NOTIFICATION
 
@@ -91,8 +97,8 @@ export class AuthGuard implements CanActivate {
     }
 
     // update session last activity
-    session.updatedAt = new Date();
-    await session.save();
+    session.lastActivity = new Date();
+    await this.sessionsRepository.save(session);
 
     // we're assigning the user to the request object here
     // so that we can access it in our route handlers

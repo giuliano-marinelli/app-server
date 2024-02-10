@@ -1,29 +1,21 @@
-import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 
-import { subject } from '@casl/ability';
-
-import { GraphQLObjectID } from 'graphql-scalars';
-import { Schema as MongooseSchema } from 'mongoose';
+import { GraphQLUUID } from 'graphql-scalars';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { Action } from 'src/casl/casl-ability.factory';
 import { CheckPolicies } from 'src/casl/decorators/casl.decorator';
+import { TypeORMOrderTransform, TypeORMWhereTransform } from 'src/common/search/search';
+import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
-import { CreateUserInput, UpdateUserInput, User } from './entities/user.entity';
-import { Session } from 'src/sessions/entities/session.entity';
+import { CreateUserInput, UpdateUserInput, User, UserOrderInput, UserWhereInput } from './entities/user.entity';
 
-import { FilterUserInput } from './dto/filter-user.input';
-import { PaginationInput } from 'src/search/dto/pagination.input';
-import { SortInput } from 'src/search/dto/sort.input';
+import { PaginationInput } from 'src/common/search/pagination.input';
 
 import { UsersService } from './users.service';
-import { SessionsService } from 'src/sessions/sessions.service';
 
 @Resolver(() => User)
 export class UsersResolver {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly sessionsService: SessionsService
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Public()
   @CheckPolicies((args) => ({
@@ -31,37 +23,9 @@ export class UsersResolver {
     subject: User.name,
     fields: args.createUserInput
   }))
-  @Mutation(() => User)
+  @Mutation(() => User, { nullable: true })
   async createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
     return await this.usersService.create(createUserInput);
-  }
-
-  @Public()
-  @CheckPolicies((args) => ({
-    action: Action.Filter,
-    subject: User.name,
-    fields: args.filter
-  }))
-  @Query(() => [User], { name: 'users' })
-  async findAll(
-    @Args('search', { nullable: true }) search: string,
-    @Args('filter', { nullable: true }) filter: FilterUserInput,
-    @Args('sort', { type: () => [SortInput], nullable: true }) sort: SortInput[],
-    @Args('pagination', { nullable: true }) pagination: PaginationInput,
-    @Args('optional', { defaultValue: false }) optional: boolean
-  ) {
-    return await this.usersService.findAll({ search, filter, sort, pagination, optional });
-  }
-
-  @Public()
-  @CheckPolicies(() => ({
-    action: Action.Read,
-    subject: User.name
-  }))
-  @Query(() => User, { name: 'user' })
-  async findOne(@Args('id', { type: () => GraphQLObjectID }) id: MongooseSchema.Types.ObjectId) {
-    console.log('id', id);
-    return await this.usersService.findOne(id);
   }
 
   @CheckPolicies((args) => ({
@@ -69,23 +33,45 @@ export class UsersResolver {
     subject: User.name,
     fields: args.updateUserInput
   }))
-  @Mutation(() => User)
+  @Mutation(() => User, { nullable: true })
   async updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
-    return await this.usersService.update(updateUserInput._id, updateUserInput);
+    return await this.usersService.update(updateUserInput);
   }
 
   @CheckPolicies((args) => ({
     action: Action.Delete,
     subject: User.name,
-    fields: { _id: args.id }
+    fields: { id: args.id }
   }))
-  @Mutation(() => User)
-  async deleteUser(@Args('id', { type: () => GraphQLObjectID }) id: MongooseSchema.Types.ObjectId) {
-    return await this.usersService.remove(id);
+  @Mutation(() => GraphQLUUID)
+  async deleteUser(@Args('id', { type: () => GraphQLUUID }) id: string) {
+    return await this.usersService.delete(id);
   }
 
-  //   @ResolveField(() => [Session])
-  //   async sessions(@Parent() user: User) {
-  //     return this.sessionsService.findAll({ userId: user.id });
-  //   }
+  @Public()
+  @CheckPolicies(() => ({
+    action: Action.Read,
+    subject: User.name
+  }))
+  @Query(() => User, { name: 'user', nullable: true })
+  async findOne(@Args('id', { type: () => GraphQLUUID }) id: string) {
+    return await this.usersService.findOne(id);
+  }
+
+  @Public()
+  @CheckPolicies((args) => ({
+    action: Action.Filter,
+    subject: User.name,
+    fields: args.where
+  }))
+  @Query(() => [User], { name: 'users', nullable: 'items' })
+  async findAll(
+    @Args('where', { type: () => [UserWhereInput], nullable: true }, TypeORMWhereTransform<User>)
+    where: FindOptionsWhere<User>,
+    @Args('order', { type: () => [UserOrderInput], nullable: true }, TypeORMOrderTransform<User>)
+    order: FindOptionsOrder<User>,
+    @Args('pagination', { nullable: true }) pagination: PaginationInput
+  ) {
+    return await this.usersService.findAll({ where, order, pagination });
+  }
 }

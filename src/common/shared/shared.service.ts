@@ -1,18 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
 
-import { Model } from 'mongoose';
 import { PolyAES } from 'poly-crypto';
-
-import { Device } from 'src/sessions/entities/device.entity';
 
 @Injectable()
 export class SharedService {
-  constructor(
-    private configService: ConfigService,
-    @InjectModel(Device.name) private readonly deviceModel: Model<Device>
-  ) {}
+  constructor(private configService: ConfigService) {}
 
   encryptDevice(device: any): string {
     return PolyAES.withKey(this.configService.get<string>('SECRET_TOKEN')).encrypt(JSON.stringify(device));
@@ -23,14 +16,14 @@ export class SharedService {
   }
 
   formatDevice(detectedDevice: any, ip: string): any {
-    return new this.deviceModel({
+    return {
       client: detectedDevice.client?.name,
       os: detectedDevice.os?.name,
       brand: detectedDevice.device?.brand,
       model: detectedDevice.device?.model,
       type: detectedDevice.device?.type,
       ip: ip
-    });
+    };
   }
 
   extractTokenFromHeader(request: Request): string | undefined {
@@ -82,28 +75,51 @@ export class SharedService {
 
   // convert filter object to array of string fields
   // sub filter fields are showed as parent.child
-  // example: { _id: { eq: '123' }, user: { _id: { eq: '456' } } }
-  // filterFields = ['_id', 'user._id']
+  // operations are ignored: eq, ne, gt, gte, lt, lte, like, ilike, in, any, between, and, or, not
+  // example: [{"username": {"and": [{"eq": null,"ne": null},{"in": ["asd","asd2"]}]},"profile": {"name": { "eq": "qwe"}}},{"role": {"or": [{"eq": "user"},{"eq": "guest"}]}}]
+  // filterFields = ['username', 'profile.name', 'role']
+  // example 2: { username: { eq: 'asd' }, profile: { name: { eq: 'qwe' } }, role: { or: [{ eq: 'user' }, { eq: 'guest' }] } }
+  // filterFields = ['username', 'profile.name', 'role']
   getFilterFieldsAsString(filter: any = {}): string[] {
     const fields: string[] = [];
 
     if (!filter) return [];
 
-    Object.keys(filter)?.forEach((field) => {
-      if (
-        filter[field]?.eq != null ||
-        filter[field]?.ne != null ||
-        filter[field]?.gt != null ||
-        filter[field]?.gte != null ||
-        filter[field]?.lt != null ||
-        filter[field]?.lte != null ||
-        filter[field]?.like != null
-      ) {
-        fields.push(field);
-      } else {
-        fields.push(...this.getFilterFieldsAsString(filter[field]).map((subfield) => `${field}.${subfield}`));
-      }
-    });
+    if (Array.isArray(filter)) {
+      filter.forEach((subfilter) => {
+        fields.push(...this.getFilterFieldsAsString(subfilter));
+      });
+    } else if (typeof filter == 'object') {
+      Object.keys(filter)?.forEach((field) => {
+        if (
+          field != 'eq' &&
+          field != 'ne' &&
+          field != 'gt' &&
+          field != 'gte' &&
+          field != 'lt' &&
+          field != 'lte' &&
+          field != 'like' &&
+          field != 'ilike' &&
+          field != 'in' &&
+          field != 'any' &&
+          field != 'between' &&
+          field != 'and' &&
+          field != 'or' &&
+          field != 'not'
+        ) {
+          let subfields;
+          if (typeof filter[field] == 'object')
+            subfields = this.getFilterFieldsAsString(filter[field]).map((subfield) => `${field}.${subfield}`);
+
+          if (!subfields?.length) fields.push(field);
+          else fields.push(...subfields);
+        } else {
+          if (typeof filter[field] == 'object') {
+            fields.push(...this.getFilterFieldsAsString(filter[field]));
+          }
+        }
+      });
+    }
 
     return fields;
   }

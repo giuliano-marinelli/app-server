@@ -1,51 +1,64 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
 
 import * as bcrypt from 'bcryptjs';
-import { Model, Schema as MongooseSchema } from 'mongoose';
+import { FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 
 import { CreateUserInput, UpdateUserInput, User } from './entities/user.entity';
 
+import { PaginationInput } from 'src/common/search/pagination.input';
+
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {}
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>
+  ) {}
 
   async create(createUserInput: CreateUserInput) {
     // check if username or email are already taken
-    const existent = await this.userModel.findOne({
-      $or: [{ username: createUserInput.username }, { email: createUserInput.email }]
+    const existent = await this.usersRepository.findOne({
+      where: [{ username: createUserInput.username }, { email: createUserInput.email }]
     });
     if (existent) throw new ConflictException('Email or username are already taken.');
 
-    // add authorization and informative parameters
-    const newUser = new this.userModel(createUserInput);
-
     // hash password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newUser.password, salt);
-    newUser.password = hashedPassword;
+    const hashedPassword = await bcrypt.hash(createUserInput.password, salt);
+    createUserInput.password = hashedPassword;
 
-    return await this.userModel.create(newUser);
+    const insert = await this.usersRepository.insert(createUserInput);
+    return await this.usersRepository.findOneBy({ id: insert.identifiers[0].id });
   }
 
-  async findAll(options: { search?: string; filter?: any; sort?: any; pagination?: any; optional?: boolean }) {
-    // console.log('search', options.search);
-    // console.log('filter', options.filter);
-    // console.log('sort', options.sort);
-    // console.log('pagination', options.pagination);
-    // console.log('optional', options.optional);
-    return await this.userModel.find();
+  async update(updateUserInput: UpdateUserInput) {
+    await this.usersRepository.update({ id: updateUserInput.id }, updateUserInput);
+    return await this.usersRepository.findOneBy({ id: updateUserInput.id });
   }
 
-  async findOne(id: MongooseSchema.Types.ObjectId) {
-    return await this.userModel.findById(id);
+  async delete(id: string) {
+    await this.usersRepository.softDelete({ id: id });
+    return id;
   }
 
-  async update(id: MongooseSchema.Types.ObjectId, updateUserInput: UpdateUserInput) {
-    return await this.userModel.findByIdAndUpdate(id, updateUserInput, { new: true });
+  async findOne(id: string) {
+    return await this.usersRepository.findOne({
+      relations: { sessions: true },
+      where: { id: id }
+    });
   }
 
-  async remove(id: MongooseSchema.Types.ObjectId) {
-    return await this.userModel.findByIdAndDelete(id);
+  async findAll(options: {
+    where?: FindOptionsWhere<User>;
+    order?: FindOptionsOrder<User>;
+    pagination?: PaginationInput;
+  }) {
+    return await this.usersRepository.find({
+      relations: { sessions: true },
+      where: options.where,
+      order: options.order,
+      skip: options.pagination ? (options.pagination?.page - 1) * options.pagination?.count : null,
+      take: options.pagination ? options.pagination?.count : null
+    });
   }
 }
