@@ -1,6 +1,6 @@
 import { SetMetadata } from '@nestjs/common';
 
-import { Action } from '../casl-ability.factory';
+import { Action } from '../casl.factory';
 
 export type Policy = (args, selectionsSet?) => { action: Action; subject: string; fields?: any };
 

@@ -1,11 +1,12 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 
+import { FilterField, FilterOrderType, FilterWhereType } from '@nestjs!/graphql-filter';
+
 import { GraphQLURL } from 'graphql-scalars';
-import { FilterField, FilterWhereType } from 'src/common/search/search';
 import { Column } from 'typeorm';
 
 @ObjectType()
-@InputType('ProfileInput', { isAbstract: true })
+@InputType('ProfileInput')
 export class Profile {
   @Field(() => GraphQLURL, { nullable: true })
   @FilterField()
@@ -27,11 +28,14 @@ export class Profile {
   @Column({ nullable: true })
   location: string;
 
-  @Field({ nullable: true })
+  @Field(() => GraphQLURL, { nullable: true })
   @FilterField()
   @Column({ nullable: true })
   url: string;
 }
 
 @FilterWhereType(Profile)
-export class ProfileFilterInput {}
+export class ProfileWhereInput {}
+
+@FilterOrderType(Profile)
+export class ProfileOrderInput {}

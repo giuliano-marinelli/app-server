@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+
+import { Owner, PaginationInput, SelectionInput } from '@nestjs!/graphql-filter';
 
 import { FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 
-import { CloseSessionInput, Session } from './entities/session.entity';
+import { Session } from './entities/session.entity';
 import { Role, User } from 'src/users/entities/user.entity';
-
-import { PaginationInput } from 'src/common/search/pagination.input';
 
 @Injectable()
 export class SessionsService {
@@ -15,33 +15,42 @@ export class SessionsService {
     private sessionsRepository: Repository<Session>
   ) {}
 
-  async closeSession(closeSessionInput: CloseSessionInput) {
-    await this.sessionsRepository.update(
-      { id: closeSessionInput.id, user: closeSessionInput.user },
-      { closedAt: new Date() }
-    );
-    return await this.sessionsRepository.findOneBy({ id: closeSessionInput.id, user: closeSessionInput.user });
-  }
+  async closeSession(id: string, selection: SelectionInput, authUser: User) {
+    const session = await this.sessionsRepository.findOne({
+      where: Owner({ id: id }, 'user.id', authUser, [Role.ADMIN])
+    });
+    if (!session) throw new ConflictException('Session not found');
+    if (session?.closedAt) throw new ConflictException('Session already closed');
 
-  async findOne(id: string, authUser: User) {
-    console.log('authUser', authUser);
+    await this.sessionsRepository.update(Owner({ id: id }, 'user.id', authUser, [Role.ADMIN]), {
+      closedAt: new Date()
+    });
     return await this.sessionsRepository.findOne({
-      relations: { user: true },
-      where: { id: id, ...(authUser?.role == Role.ADMIN ? {} : { user: { id: authUser?.id } }) }
+      relations: selection?.getTypeORMRelations(),
+      where: Owner({ id: id }, 'user.id', authUser, [Role.ADMIN])
     });
   }
 
-  async findAll(options: {
-    where?: FindOptionsWhere<Session>;
-    order?: FindOptionsOrder<Session>;
-    pagination?: PaginationInput;
-  }) {
+  async findOne(id: string, selection: SelectionInput, authUser: User) {
+    return await this.sessionsRepository.findOne({
+      relations: selection?.getTypeORMRelations(),
+      where: Owner({ id: id }, 'user.id', authUser, [Role.ADMIN])
+    });
+  }
+
+  async findAll(
+    where: FindOptionsWhere<Session>,
+    order: FindOptionsOrder<Session>,
+    pagination: PaginationInput,
+    selection: SelectionInput,
+    authUser: User
+  ) {
     return await this.sessionsRepository.find({
-      relations: { user: true },
-      where: options.where,
-      order: options.order,
-      skip: options.pagination ? (options.pagination?.page - 1) * options.pagination?.count : null,
-      take: options.pagination ? options.pagination?.count : null
+      relations: selection?.getTypeORMRelations(),
+      where: Owner(where, 'user.id', authUser, [Role.ADMIN]),
+      order: order,
+      skip: pagination ? (pagination.page - 1) * pagination.count : null,
+      take: pagination ? pagination.count : null
     });
   }
 }

@@ -1,6 +1,7 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 
-import { FilterField, FilterWhereType } from 'src/common/search/search';
+import { FilterField, FilterOrderType, FilterWhereType } from '@nestjs!/graphql-filter';
+
 import { Column } from 'typeorm';
 
 @ObjectType()
@@ -43,4 +44,7 @@ export class Device {
 }
 
 @FilterWhereType(Device)
-export class DeviceFilterInput {}
+export class DeviceWhereInput {}
+
+@FilterOrderType(Device)
+export class DeviceOrderInput {}

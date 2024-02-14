@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 
 import { PolyAES } from 'poly-crypto';
 
+import { Role, User } from 'src/users/entities/user.entity';
+
 @Injectable()
 export class SharedService {
   constructor(private configService: ConfigService) {}
@@ -31,48 +33,6 @@ export class SharedService {
     return type === 'Bearer' ? token : undefined;
   }
 
-  getQuerySelectionsSet(selections: readonly any[]): any {
-    const fields: any = {};
-
-    for (const selection of selections) {
-      if (selection.kind === 'Field') {
-        fields[selection.name.value] = {};
-      }
-
-      if (selection.selectionSet) {
-        fields[selection.name.value] = this.getQuerySelectionsSet(selection.selectionSet.selections);
-      }
-    }
-
-    return fields;
-  }
-
-  // convert selections set object to array of string fields
-  // sub selections set are showed as parent.child
-  // example: user { name, email, sessions { _id, ip } }
-  // selectionsSet = ['name', 'email', 'sessions._id', 'sessions.ip']
-  getQuerySelectionsSetAsString(selections: readonly any[]): string[] {
-    const fields: string[] = [];
-
-    if (!selections) return [];
-
-    for (const selection of selections) {
-      if (selection.kind === 'Field') {
-        if (selection.selectionSet) {
-          fields.push(
-            ...this.getQuerySelectionsSetAsString(selection.selectionSet.selections).map(
-              (field) => `${selection.name.value}.${field}`
-            )
-          );
-        } else {
-          fields.push(selection.name.value);
-        }
-      }
-    }
-
-    return fields;
-  }
-
   // convert filter object to array of string fields
   // sub filter fields are showed as parent.child
   // operations are ignored: eq, ne, gt, gte, lt, lte, like, ilike, in, any, between, and, or, not
@@ -80,14 +40,14 @@ export class SharedService {
   // filterFields = ['username', 'profile.name', 'role']
   // example 2: { username: { eq: 'asd' }, profile: { name: { eq: 'qwe' } }, role: { or: [{ eq: 'user' }, { eq: 'guest' }] } }
   // filterFields = ['username', 'profile.name', 'role']
-  getFilterFieldsAsString(filter: any = {}): string[] {
+  formatFilterFields(filter: any = {}): string[] {
     const fields: string[] = [];
 
     if (!filter) return [];
 
     if (Array.isArray(filter)) {
       filter.forEach((subfilter) => {
-        fields.push(...this.getFilterFieldsAsString(subfilter));
+        fields.push(...this.formatFilterFields(subfilter));
       });
     } else if (typeof filter == 'object') {
       Object.keys(filter)?.forEach((field) => {
@@ -109,13 +69,13 @@ export class SharedService {
         ) {
           let subfields;
           if (typeof filter[field] == 'object')
-            subfields = this.getFilterFieldsAsString(filter[field]).map((subfield) => `${field}.${subfield}`);
+            subfields = this.formatFilterFields(filter[field]).map((subfield) => `${field}.${subfield}`);
 
           if (!subfields?.length) fields.push(field);
           else fields.push(...subfields);
         } else {
           if (typeof filter[field] == 'object') {
-            fields.push(...this.getFilterFieldsAsString(filter[field]));
+            fields.push(...this.formatFilterFields(filter[field]));
           }
         }
       });
@@ -127,14 +87,14 @@ export class SharedService {
   // convert fields object with sub objects in a one level fields object
   // example: { _id: '65b41de0c641815f7ff5efdf', profile: { bio: 'something', phone: { number: 123456, area: 299} } }
   // oneLevelFields = { _id: '65b41de0c641815f7ff5efdf', 'profile.bio': 'something', 'profile.phone.number': 123456, 'profile.phone.area': 299 }
-  getOneLevelFields(fields: any = {}): any {
+  formatFields(fields: any = {}): any {
     const oneLevelFields: any = {};
 
     if (!fields) return {};
 
     Object.keys(fields)?.forEach((field) => {
       if (typeof fields[field] == 'object') {
-        const subfields = this.getOneLevelFields(fields[field]);
+        const subfields = this.formatFields(fields[field]);
         Object.keys(subfields)?.forEach((subfield) => {
           oneLevelFields[`${field}.${subfield}`] = subfields[subfield];
         });

@@ -1,15 +1,21 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 
+import {
+  AuthUser,
+  PaginationInput,
+  SelectionInput,
+  SelectionSet,
+  TypeORMOrderTransform,
+  TypeORMWhereTransform
+} from '@nestjs!/graphql-filter';
+
 import { GraphQLUUID } from 'graphql-scalars';
 import { Public } from 'src/auth/decorators/public.decorator';
-import { Action } from 'src/casl/casl-ability.factory';
+import { Action } from 'src/casl/casl.factory';
 import { CheckPolicies } from 'src/casl/decorators/casl.decorator';
-import { TypeORMOrderTransform, TypeORMWhereTransform } from 'src/common/search/search';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
-import { CreateUserInput, UpdateUserInput, User, UserOrderInput, UserWhereInput } from './entities/user.entity';
-
-import { PaginationInput } from 'src/common/search/pagination.input';
+import { User, UserCreateInput, UserOrderInput, UserUpdateInput, UserWhereInput } from './entities/user.entity';
 
 import { UsersService } from './users.service';
 
@@ -24,8 +30,11 @@ export class UsersResolver {
     fields: args.createUserInput
   }))
   @Mutation(() => User, { nullable: true })
-  async createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
-    return await this.usersService.create(createUserInput);
+  async createUser(
+    @Args('userCreateInput') userCreateInput: UserCreateInput,
+    @SelectionSet() selection: SelectionInput
+  ) {
+    return await this.usersService.create(userCreateInput, selection);
   }
 
   @CheckPolicies((args) => ({
@@ -34,8 +43,27 @@ export class UsersResolver {
     fields: args.updateUserInput
   }))
   @Mutation(() => User, { nullable: true })
-  async updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
-    return await this.usersService.update(updateUserInput);
+  async updateUser(
+    @Args('userUpdateInput') userUpdateInput: UserUpdateInput,
+    @SelectionSet() selection: SelectionInput,
+    @AuthUser() authUser: User
+  ) {
+    return await this.usersService.update(userUpdateInput, selection, authUser);
+  }
+
+  @CheckPolicies((args) => ({
+    action: Action.Update,
+    subject: User.name,
+    fields: { password: args.password }
+  }))
+  @Mutation(() => User, { nullable: true })
+  async updatePassword(
+    @Args('id', { type: () => GraphQLUUID }) id: string,
+    @Args('password') password: string,
+    @SelectionSet() selection: SelectionInput,
+    @AuthUser() authUser: User
+  ) {
+    return await this.usersService.updatePassword(id, password, selection, authUser);
   }
 
   @CheckPolicies((args) => ({
@@ -44,8 +72,8 @@ export class UsersResolver {
     fields: { id: args.id }
   }))
   @Mutation(() => GraphQLUUID)
-  async deleteUser(@Args('id', { type: () => GraphQLUUID }) id: string) {
-    return await this.usersService.delete(id);
+  async deleteUser(@Args('id', { type: () => GraphQLUUID }) id: string, @AuthUser() authUser: User) {
+    return await this.usersService.delete(id, authUser);
   }
 
   @Public()
@@ -54,8 +82,8 @@ export class UsersResolver {
     subject: User.name
   }))
   @Query(() => User, { name: 'user', nullable: true })
-  async findOne(@Args('id', { type: () => GraphQLUUID }) id: string) {
-    return await this.usersService.findOne(id);
+  async findOne(@Args('id', { type: () => GraphQLUUID }) id: string, @SelectionSet() selection: SelectionInput) {
+    return await this.usersService.findOne(id, selection);
   }
 
   @Public()
@@ -70,8 +98,9 @@ export class UsersResolver {
     where: FindOptionsWhere<User>,
     @Args('order', { type: () => [UserOrderInput], nullable: true }, TypeORMOrderTransform<User>)
     order: FindOptionsOrder<User>,
-    @Args('pagination', { nullable: true }) pagination: PaginationInput
+    @Args('pagination', { nullable: true }) pagination: PaginationInput,
+    @SelectionSet() selection: SelectionInput
   ) {
-    return await this.usersService.findAll({ where, order, pagination });
+    return await this.usersService.findAll(where, order, pagination, selection);
   }
 }

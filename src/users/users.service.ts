@@ -1,12 +1,12 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { PaginationInput, SelectionInput } from '@nestjs!/graphql-filter';
+
 import * as bcrypt from 'bcryptjs';
-import { FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
+import { Equal, FindOptionsOrder, FindOptionsWhere, Not, Repository } from 'typeorm';
 
-import { CreateUserInput, UpdateUserInput, User } from './entities/user.entity';
-
-import { PaginationInput } from 'src/common/search/pagination.input';
+import { Role, User, UserCreateInput, UserUpdateInput } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -15,50 +15,109 @@ export class UsersService {
     private usersRepository: Repository<User>
   ) {}
 
-  async create(createUserInput: CreateUserInput) {
-    // check if username or email are already taken
-    const existent = await this.usersRepository.findOne({
-      where: [{ username: createUserInput.username }, { email: createUserInput.email }]
+  async create(userCreateInput: UserCreateInput, selection: SelectionInput) {
+    // check if username already taken
+    const existentUsername = await this.usersRepository.findOne({
+      where: { username: userCreateInput.username }
     });
-    if (existent) throw new ConflictException('Email or username are already taken.');
+    if (existentUsername) throw new ConflictException('Username already taken.');
+
+    // check if email already taken
+    const existentEmail = await this.usersRepository.findOne({
+      where: { email: userCreateInput.email }
+    });
+    if (existentEmail) throw new ConflictException('Email already taken.');
 
     // hash password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(createUserInput.password, salt);
-    createUserInput.password = hashedPassword;
+    const hashedPassword = await bcrypt.hash(userCreateInput.password, salt);
+    userCreateInput.password = hashedPassword;
 
-    const insert = await this.usersRepository.insert(createUserInput);
-    return await this.usersRepository.findOneBy({ id: insert.identifiers[0].id });
-  }
-
-  async update(updateUserInput: UpdateUserInput) {
-    await this.usersRepository.update({ id: updateUserInput.id }, updateUserInput);
-    return await this.usersRepository.findOneBy({ id: updateUserInput.id });
-  }
-
-  async delete(id: string) {
-    await this.usersRepository.softDelete({ id: id });
-    return id;
-  }
-
-  async findOne(id: string) {
+    const insert = await this.usersRepository.insert(userCreateInput);
     return await this.usersRepository.findOne({
-      relations: { sessions: true },
+      relations: selection?.getTypeORMRelations(),
+      where: { id: insert.identifiers[0].id }
+    });
+  }
+
+  async update(userUpdateInput: UserUpdateInput, selection: SelectionInput, authUser: User) {
+    // only admin can update other users
+    if (userUpdateInput.id != authUser.id && authUser.role != Role.ADMIN)
+      throw new ForbiddenException('Cannot update users other than yourself.');
+
+    // check if user exists
+    const found = await this.usersRepository.findOne({
+      where: { id: userUpdateInput.id }
+    });
+    if (!found) throw new ConflictException('User not found');
+
+    // check if username already taken
+    if (userUpdateInput.username) {
+      const existentUsername = await this.usersRepository.findOne({
+        where: [{ id: Not(Equal(userUpdateInput.id)), username: userUpdateInput.username }]
+      });
+      if (existentUsername) throw new ConflictException('Username already taken.');
+    }
+
+    // check if email already taken
+    if (userUpdateInput.email) {
+      const existentEmail = await this.usersRepository.findOne({
+        where: [{ id: Not(Equal(userUpdateInput.id)), email: userUpdateInput.email }]
+      });
+      if (existentEmail) throw new ConflictException('Email already taken.');
+    }
+
+    await this.usersRepository.update({ id: userUpdateInput.id }, userUpdateInput);
+    return await this.usersRepository.findOne({
+      relations: selection?.getTypeORMRelations(),
+      where: { id: userUpdateInput.id }
+    });
+  }
+
+  async updatePassword(id: string, password: string, selection: SelectionInput, authUser: User) {
+    // only admin can update other users
+    if (id != authUser.id && authUser.role != Role.ADMIN)
+      throw new ForbiddenException('Cannot update users other than yourself.');
+
+    // hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    await this.usersRepository.update({ id: id }, { password: hashedPassword });
+    return await this.usersRepository.findOne({
+      relations: selection?.getTypeORMRelations(),
       where: { id: id }
     });
   }
 
-  async findAll(options: {
-    where?: FindOptionsWhere<User>;
-    order?: FindOptionsOrder<User>;
-    pagination?: PaginationInput;
-  }) {
+  async delete(id: string, authUser: User) {
+    // only admin can delete other users
+    if (id != authUser.id && authUser.role != Role.ADMIN)
+      throw new ForbiddenException('Cannot delete users other than yourself.');
+
+    await this.usersRepository.softDelete({ id: id });
+    return id;
+  }
+
+  async findOne(id: string, selection: SelectionInput) {
+    return await this.usersRepository.findOne({
+      relations: selection?.getTypeORMRelations(),
+      where: { id: id }
+    });
+  }
+
+  async findAll(
+    where: FindOptionsWhere<User>,
+    order: FindOptionsOrder<User>,
+    pagination: PaginationInput,
+    selection: SelectionInput
+  ) {
     return await this.usersRepository.find({
-      relations: { sessions: true },
-      where: options.where,
-      order: options.order,
-      skip: options.pagination ? (options.pagination?.page - 1) * options.pagination?.count : null,
-      take: options.pagination ? options.pagination?.count : null
+      relations: selection?.getTypeORMRelations(),
+      where: where,
+      order: order,
+      skip: pagination ? (pagination.page - 1) * pagination.count : null,
+      take: pagination ? pagination.count : null
     });
   }
 }

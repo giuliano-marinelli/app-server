@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
-import { CaslAbilityFactory } from './casl-ability.factory';
+import { CaslFactory } from './casl.factory';
 import { PoliciesGuard } from './casl.guard';
 
 import { SharedModule } from 'src/common/shared/shared.module';
 
 @Module({
   imports: [SharedModule],
-  providers: [CaslAbilityFactory, { provide: APP_GUARD, useClass: PoliciesGuard }],
-  exports: [CaslAbilityFactory]
+  providers: [CaslFactory, { provide: APP_GUARD, useClass: PoliciesGuard }],
+  exports: [CaslFactory]
 })
 export class CaslModule {}

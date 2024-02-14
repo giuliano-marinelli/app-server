@@ -9,9 +9,10 @@ import {
   registerEnumType
 } from '@nestjs/graphql';
 
+import { FilterField, FilterOrderType, FilterWhereType } from '@nestjs!/graphql-filter';
+
 import { IsEmail, MaxLength, MinLength } from 'class-validator';
 import { GraphQLEmailAddress, GraphQLUUID } from 'graphql-scalars';
-import { FilterField, FilterOrderType, FilterWhereType } from 'src/common/search/search';
 import {
   Column,
   CreateDateColumn,
@@ -23,8 +24,8 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 
-import { Profile, ProfileFilterInput } from './profile.entity';
-import { Session } from 'src/sessions/entities/session.entity';
+import { Profile, ProfileOrderInput, ProfileWhereInput } from './profile.entity';
+import { Session, SessionOrderInput, SessionWhereInput } from 'src/sessions/entities/session.entity';
 
 export enum Role {
   USER = 'user',
@@ -80,7 +81,7 @@ export class User {
   role: Role;
 
   @Field(() => Profile, { nullable: true })
-  @FilterField(() => ProfileFilterInput)
+  @FilterField(() => ProfileWhereInput, () => ProfileOrderInput)
   @Column(() => Profile)
   profile: Profile;
 
@@ -115,20 +116,21 @@ export class User {
   deletedAt: Date;
 
   @Field(() => [Session], { nullable: true })
+  @FilterField(() => SessionWhereInput, () => SessionOrderInput)
   @OneToMany(() => Session, (session) => session.user, { cascade: true })
   sessions: Session[];
 }
 
 @InputType()
-export class CreateUserInput extends OmitType(
+export class UserCreateInput extends OmitType(
   User,
   ['id', 'createdAt', 'updatedAt', 'deletedAt', 'sessions'],
   InputType
 ) {}
 
 @InputType()
-export class UpdateUserInput extends IntersectionType(
-  PartialType(CreateUserInput),
+export class UserUpdateInput extends IntersectionType(
+  PartialType(OmitType(UserCreateInput, ['password'])),
   PickType(User, ['id'], InputType)
 ) {}
 

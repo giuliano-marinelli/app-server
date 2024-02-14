@@ -16,7 +16,7 @@ export enum Action {
 }
 
 @Injectable()
-export class CaslAbilityFactory {
+export class CaslFactory {
   createForUser(user: User) {
     const { can: allow, cannot: forbid, build } = new AbilityBuilder(createMongoAbility);
 
@@ -26,22 +26,23 @@ export class CaslAbilityFactory {
       // manage not includes filter
     });
 
+    if (user) console.info('\x1b[35m', 'AuthUser', user?.username, '(', user?.role, ')', '[', user?.id, ']');
+    else console.info('\x1b[36m', 'NO AuthUser');
+
     // PUBLIC
 
     // Users
     allow(Action.Read, User.name);
-    forbid(Action.Read, User.name, ['password', 'verificationCode', 'lastVerificationTry', 'sessions']);
+    forbid(Action.Read, User.name, ['password', 'verificationCode', 'lastVerificationTry', 'sessions.token']);
     allow(Action.Filter, User.name, ['username', 'email']);
-    // allow(Action.Filter, User.name);
     allow(Action.Create, User.name, ['username', 'email', 'password']);
-
-    console.log('logged user', user?.id.toString());
 
     // USER
     if (user?.role == Role.USER) {
       // Users
-      allow(Action.Modify, User.name, { id: user.id });
-      forbid(Action.Modify, User.name, [
+      // limited to logged user on service
+      allow(Action.Update, User.name);
+      forbid(Action.Update, User.name, [
         'role',
         'verified',
         'verificationCode',
@@ -51,11 +52,13 @@ export class CaslAbilityFactory {
         'deletedAt',
         'sessions'
       ]);
+      allow(Action.Delete, User.name, ['id']);
 
       // Sessions
+      // limited to logged user on service
       allow(Action.Read, Session.name);
       forbid(Action.Read, Session.name, ['token']);
-      allow(Action.Filter, Session.name, ['user.username', 'device.client', 'createdAt', 'updatedAt', 'deletedAt']);
+      allow(Action.Update, Session.name, ['id']);
     }
 
     // ADMIN

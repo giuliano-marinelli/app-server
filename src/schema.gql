@@ -2,28 +2,22 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+"""Where input for boolean type"""
 input BooleanWhereInput {
+  """List of AND conditions"""
   and: [BooleanWhereInput!]
+
+  """Equal to"""
   eq: Boolean
+
+  """Not equal to"""
   ne: Boolean
+
+  """Negated condition"""
   not: BooleanWhereInput
+
+  """List of OR conditions"""
   or: [BooleanWhereInput!]
-}
-
-input CloseSessionInput {
-  id: UUID!
-  user: UserInput
-}
-
-input CreateUserInput {
-  email: EmailAddress!
-  lastVerificationTry: DateTime
-  password: String!
-  profile: ProfileInput
-  role: Role
-  username: String!
-  verificationCode: String
-  verified: Boolean
 }
 
 """
@@ -31,18 +25,42 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+"""Where input for date type"""
 input DateTimeWhereInput {
+  """List of AND conditions"""
   and: [DateTimeWhereInput!]
+
+  """Equal to anything in the list"""
   any: [DateTime!]
+
+  """Value is between two values"""
   between: [DateTime!]
+
+  """Equal to"""
   eq: DateTime
+
+  """Greater than"""
   gt: DateTime
+
+  """Greater than or equal to"""
   gte: DateTime
+
+  """Equal to anything in the list"""
   in: [DateTime!]
+
+  """Less than"""
   lt: DateTime
+
+  """Less than or equal to"""
   lte: DateTime
+
+  """Not equal to"""
   ne: DateTime
+
+  """Negated condition"""
   not: DateTimeWhereInput
+
+  """List of OR conditions"""
   or: [DateTimeWhereInput!]
 }
 
@@ -56,17 +74,6 @@ type Device {
   type: String
 }
 
-""""""
-input DeviceFilterInput {
-  bot: BooleanWhereInput
-  brand: StringWhereInput
-  client: StringWhereInput
-  ip: StringWhereInput
-  model: StringWhereInput
-  os: StringWhereInput
-  type: StringWhereInput
-}
-
 input DeviceInput {
   bot: Boolean
   brand: String
@@ -77,21 +84,39 @@ input DeviceInput {
   type: String
 }
 
+""""""
+input DeviceOrderInput {
+  bot: OrderDirection
+  brand: OrderDirection
+  client: OrderDirection
+  ip: OrderDirection
+  model: OrderDirection
+  os: OrderDirection
+  type: OrderDirection
+}
+
+""""""
+input DeviceWhereInput {
+  bot: BooleanWhereInput
+  brand: StringWhereInput
+  client: StringWhereInput
+  ip: StringWhereInput
+  model: StringWhereInput
+  os: StringWhereInput
+  type: StringWhereInput
+}
+
 """
 A field whose value conforms to the standard internet email address format as specified in HTML Spec: https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address.
 """
 scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
 
-input LoginInput {
-  password: String!
-  usernameOrEmail: String!
-}
-
 type Mutation {
-  closeSession(closeSessionInput: CloseSessionInput!): Session
-  createUser(createUserInput: CreateUserInput!): User
+  closeSession(id: UUID!): Session
+  createUser(userCreateInput: UserCreateInput!): User
   deleteUser(id: UUID!): UUID!
-  updateUser(updateUserInput: UpdateUserInput!): User
+  updatePassword(id: UUID!, password: String!): User
+  updateUser(userUpdateInput: UserUpdateInput!): User
 }
 
 """Defines the order direction."""
@@ -103,8 +128,12 @@ enum OrderDirection {
   DESC
 }
 
+"""Pagination generic input"""
 input PaginationInput {
+  """The number of items per page"""
   count: Int!
+
+  """The page number"""
   page: Int!
 }
 
@@ -113,16 +142,7 @@ type Profile {
   bio: String
   location: String
   name: String
-  url: String
-}
-
-""""""
-input ProfileFilterInput {
-  avatar: StringWhereInput
-  bio: StringWhereInput
-  location: StringWhereInput
-  name: StringWhereInput
-  url: StringWhereInput
+  url: URL
 }
 
 input ProfileInput {
@@ -130,12 +150,30 @@ input ProfileInput {
   bio: String
   location: String
   name: String
-  url: String
+  url: URL
+}
+
+""""""
+input ProfileOrderInput {
+  avatar: OrderDirection
+  bio: OrderDirection
+  location: OrderDirection
+  name: OrderDirection
+  url: OrderDirection
+}
+
+""""""
+input ProfileWhereInput {
+  avatar: StringWhereInput
+  bio: StringWhereInput
+  location: StringWhereInput
+  name: StringWhereInput
+  url: StringWhereInput
 }
 
 type Query {
   """Login with username or email and password. Returns the token string."""
-  login(loginInput: LoginInput!): String!
+  login(password: String!, usernameOrEmail: String!): String!
   session(id: UUID!): Session
   sessions(order: [SessionOrderInput!], pagination: PaginationInput, where: [SessionWhereInput!]): [Session]!
   user(id: UUID!): User
@@ -163,28 +201,16 @@ type Session {
   user: User
 }
 
-input SessionInput {
-  blockedAt: DateTime
-  closedAt: DateTime
-  createdAt: DateTime!
-  device: DeviceInput
-  id: UUID!
-  lastActivity: DateTime! = "2024-02-10T08:16:25.101Z"
-  token: String!
-  updatedAt: DateTime!
-  user: UserInput
-}
-
 """"""
 input SessionOrderInput {
   blockedAt: OrderDirection
   closedAt: OrderDirection
   createdAt: OrderDirection
-  device: OrderDirection
+  device: DeviceOrderInput
   lastActivity: OrderDirection
   token: OrderDirection
   updatedAt: OrderDirection
-  user: OrderDirection
+  user: UserOrderInput
 }
 
 """"""
@@ -192,22 +218,40 @@ input SessionWhereInput {
   blockedAt: DateTimeWhereInput
   closedAt: DateTimeWhereInput
   createdAt: DateTimeWhereInput
-  device: DeviceFilterInput
+  device: DeviceWhereInput
   lastActivity: DateTimeWhereInput
   token: StringWhereInput
   updatedAt: DateTimeWhereInput
   user: UserWhereInput
 }
 
+"""Where input for string type"""
 input StringWhereInput {
+  """List of AND conditions"""
   and: [StringWhereInput!]
+
+  """Equal to anything in the list"""
   any: [String!]
+
+  """Equal to"""
   eq: String
+
+  """Case-sensitive pattern matching expression"""
   ilike: String
+
+  """Equal to anything in the list"""
   in: [String!]
+
+  """Pattern matching expression"""
   like: String
+
+  """Not equal to"""
   ne: String
+
+  """Negated condition"""
   not: StringWhereInput
+
+  """List of OR conditions"""
   or: [StringWhereInput!]
 }
 
@@ -220,18 +264,6 @@ scalar URL
 A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
 """
 scalar UUID
-
-input UpdateUserInput {
-  email: EmailAddress
-  id: UUID!
-  lastVerificationTry: DateTime
-  password: String
-  profile: ProfileInput
-  role: Role
-  username: String
-  verificationCode: String
-  verified: Boolean
-}
 
 type User {
   createdAt: DateTime!
@@ -249,17 +281,12 @@ type User {
   verified: Boolean
 }
 
-input UserInput {
-  createdAt: DateTime!
-  deletedAt: DateTime
+input UserCreateInput {
   email: EmailAddress!
-  id: UUID!
   lastVerificationTry: DateTime
   password: String!
   profile: ProfileInput
   role: Role
-  sessions: [SessionInput!]
-  updatedAt: DateTime!
   username: String!
   verificationCode: String
   verified: Boolean
@@ -271,12 +298,24 @@ input UserOrderInput {
   deletedAt: OrderDirection
   email: OrderDirection
   lastVerificationTry: OrderDirection
-  profile: OrderDirection
+  profile: ProfileOrderInput
   role: OrderDirection
+  sessions: SessionOrderInput
   updatedAt: OrderDirection
   username: OrderDirection
   verificationCode: OrderDirection
   verified: OrderDirection
+}
+
+input UserUpdateInput {
+  email: EmailAddress
+  id: UUID!
+  lastVerificationTry: DateTime
+  profile: ProfileInput
+  role: Role
+  username: String
+  verificationCode: String
+  verified: Boolean
 }
 
 """"""
@@ -285,8 +324,9 @@ input UserWhereInput {
   deletedAt: DateTimeWhereInput
   email: StringWhereInput
   lastVerificationTry: DateTimeWhereInput
-  profile: ProfileFilterInput
+  profile: ProfileWhereInput
   role: StringWhereInput
+  sessions: SessionWhereInput
   updatedAt: DateTimeWhereInput
   username: StringWhereInput
   verificationCode: StringWhereInput

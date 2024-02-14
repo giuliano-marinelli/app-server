@@ -21,6 +21,7 @@
   "dependencies": {
     "@apollo/server": "^4.10.0",
     "@casl/ability": "^6.5.0",
+    "@nestjs!/graphql-filter": "^1.0.3",
     "@nestjs/apollo": "^12.0.11",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.1.1",
@@ -34,7 +35,7 @@
     "apollo-server-express": "^3.13.0",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.0",
+    "class-validator": "^0.14.1",
     "device-detector-js": "^3.0.3",
     "graphql": "^16.8.1",
     "graphql-scalars": "^1.22.4",

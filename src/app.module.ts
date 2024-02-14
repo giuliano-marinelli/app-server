@@ -8,7 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
 import { GraphQLError } from 'graphql';
-import { GraphQLDateTime, GraphQLEmailAddress, GraphQLURL, GraphQLUUID } from 'graphql-scalars';
+import { GraphQLEmailAddress, GraphQLURL, GraphQLUUID } from 'graphql-scalars';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
