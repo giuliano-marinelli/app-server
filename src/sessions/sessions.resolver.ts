@@ -1,4 +1,4 @@
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import {
   AuthUser,
@@ -11,7 +11,7 @@ import {
 
 import { GraphQLUUID } from 'graphql-scalars';
 import { Action } from 'src/casl/casl.factory';
-import { CheckPolicies } from 'src/casl/decorators/casl.decorator';
+import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
 import { Session, SessionOrderInput, SessionWhereInput } from './entities/session.entity';

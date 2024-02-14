@@ -4,7 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { CaslFactory } from './casl.factory';
 import { PoliciesGuard } from './casl.guard';
 
-import { SharedModule } from 'src/common/shared/shared.module';
+import { SharedModule } from 'src/shared/shared.module';
 
 @Module({
   imports: [SharedModule],

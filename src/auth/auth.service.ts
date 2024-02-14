@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { Session } from 'src/sessions/entities/session.entity';
 import { User } from 'src/users/entities/user.entity';
 
-import { SharedService } from 'src/common/shared/shared.service';
+import { SharedService } from 'src/shared/shared.service';
 
 @Injectable()
 export class AuthService {

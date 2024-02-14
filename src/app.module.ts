@@ -13,8 +13,8 @@ import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './casl/casl.module';
-import { SharedModule } from './common/shared/shared.module';
 import { SessionsModule } from './sessions/sessions.module';
+import { SharedModule } from './shared/shared.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -39,7 +39,7 @@ import { UsersModule } from './users/users.module';
     }),
     GraphQLModule.forRoot({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'src/graphql/schema.gql'),
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
       sortSchema: true,

@@ -9,8 +9,8 @@ import { AuthResolver } from './auth.resolver';
 
 import { AuthService } from './auth.service';
 
-import { SharedModule } from 'src/common/shared/shared.module';
 import { SessionsModule } from 'src/sessions/sessions.module';
+import { SharedModule } from 'src/shared/shared.module';
 import { UsersModule } from 'src/users/users.module';
 
 @Module({

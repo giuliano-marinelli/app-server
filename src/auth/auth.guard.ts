@@ -14,7 +14,7 @@ import { IS_PUBLIC_KEY } from './decorators/public.decorator';
 import { Session } from 'src/sessions/entities/session.entity';
 import { User } from 'src/users/entities/user.entity';
 
-import { SharedService } from 'src/common/shared/shared.service';
+import { SharedService } from 'src/shared/shared.service';
 
 import DeviceDetector = require('device-detector-js');
 

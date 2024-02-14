@@ -12,7 +12,7 @@ import {
 import { GraphQLUUID } from 'graphql-scalars';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { Action } from 'src/casl/casl.factory';
-import { CheckPolicies } from 'src/casl/decorators/casl.decorator';
+import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
 import { User, UserCreateInput, UserOrderInput, UserUpdateInput, UserWhereInput } from './entities/user.entity';
