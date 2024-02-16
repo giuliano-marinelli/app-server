@@ -10,11 +10,14 @@ import {
 } from '@nestjs!/graphql-filter';
 
 import { GraphQLUUID } from 'graphql-scalars';
+import { GraphQLUpload } from 'graphql-upload-ts';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { Action } from 'src/casl/casl.factory';
 import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
+import { UploadTransform } from 'src/pipes/upload.pipe';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
+import { Profile } from './entities/profile.entity';
 import { User, UserCreateInput, UserOrderInput, UserUpdateInput, UserWhereInput } from './entities/user.entity';
 
 import { UsersService } from './users.service';
@@ -45,9 +48,14 @@ export class UsersResolver {
   @Mutation(() => User, { nullable: true })
   async updateUser(
     @Args('userUpdateInput') userUpdateInput: UserUpdateInput,
+    @Args('avatarFile', { type: () => GraphQLUpload, nullable: true }, UploadTransform) avatar: string,
     @SelectionSet() selection: SelectionInput,
     @AuthUser() authUser: User
   ) {
+    if (avatar) {
+      if (!userUpdateInput.profile) userUpdateInput.profile = new Profile();
+      userUpdateInput.profile.avatar = avatar;
+    }
     return await this.usersService.update(userUpdateInput, selection, authUser);
   }
 

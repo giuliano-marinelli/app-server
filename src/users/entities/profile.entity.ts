@@ -8,7 +8,7 @@ import { Column } from 'typeorm';
 @ObjectType()
 @InputType('ProfileInput')
 export class Profile {
-  @Field(() => GraphQLURL, { nullable: true })
+  @Field({ nullable: true })
   @FilterField()
   @Column({ nullable: true })
   avatar: string;

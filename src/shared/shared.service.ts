@@ -3,8 +3,6 @@ import { ConfigService } from '@nestjs/config';
 
 import { PolyAES } from 'poly-crypto';
 
-import { Role, User } from 'src/users/entities/user.entity';
-
 @Injectable()
 export class SharedService {
   constructor(private configService: ConfigService) {}

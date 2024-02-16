@@ -9,6 +9,7 @@ import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin
 
 import { GraphQLError } from 'graphql';
 import { GraphQLEmailAddress, GraphQLURL, GraphQLUUID } from 'graphql-scalars';
+import { GraphQLUpload } from 'graphql-upload-ts';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
@@ -42,6 +43,7 @@ import { UsersModule } from './users/users.module';
       autoSchemaFile: join(process.cwd(), 'src/graphql/schema.gql'),
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
+      uploads: false,
       sortSchema: true,
       formatError: (error: GraphQLError) => {
         // here we can format the error messages if we want
@@ -49,14 +51,24 @@ import { UsersModule } from './users/users.module';
       },
       resolvers: {
         UUID: GraphQLUUID,
+        Upload: GraphQLUpload,
         EmailAddress: GraphQLEmailAddress,
         URL: GraphQLURL
       }
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'app-client', 'dist', 'app-client', 'browser'),
-      exclude: ['/api/(.*)', '/graphql']
-    }),
+    ServeStaticModule.forRoot(
+      {
+        rootPath: join(__dirname, '..', 'uploads'),
+        serveRoot: '/public',
+        serveStaticOptions: {
+          index: false,
+          extensions: ['jpeg', 'jpg', 'png', 'gif', 'svg', 'webp']
+        }
+      },
+      {
+        rootPath: join(__dirname, '..', '..', 'app-client', 'dist', 'app-client', 'browser')
+      }
+    ),
     AuthModule,
     CaslModule,
     UsersModule,
