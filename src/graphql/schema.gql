@@ -115,8 +115,10 @@ type Mutation {
   closeSession(id: UUID!): Session
   createUser(userCreateInput: UserCreateInput!): User
   deleteUser(id: UUID!): UUID!
-  updatePassword(id: UUID!, password: String!): User
   updateUser(avatarFile: Upload, userUpdateInput: UserUpdateInput!): User
+  updateUserPassword(id: UUID!, password: String!): User
+  updateUserVerificationCode(id: UUID!): User
+  verifyUser(code: String!, id: UUID!): User
 }
 
 """Defines the order direction."""

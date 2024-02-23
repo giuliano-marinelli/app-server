@@ -1,4 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { minutes } from '@nestjs/throttler';
 
 import {
   AuthUser,
@@ -15,6 +16,7 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { Action } from 'src/casl/casl.factory';
 import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { UploadTransform } from 'src/pipes/upload.pipe';
+import { Throttle } from 'src/throttler/decorators/throttler.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
 import { Profile } from './entities/profile.entity';
@@ -32,11 +34,8 @@ export class UsersResolver {
     subject: User.name,
     fields: args.createUserInput
   }))
-  @Mutation(() => User, { nullable: true })
-  async createUser(
-    @Args('userCreateInput') userCreateInput: UserCreateInput,
-    @SelectionSet() selection: SelectionInput
-  ) {
+  @Mutation(() => User, { name: 'createUser', nullable: true })
+  async create(@Args('userCreateInput') userCreateInput: UserCreateInput, @SelectionSet() selection: SelectionInput) {
     return await this.usersService.create(userCreateInput, selection);
   }
 
@@ -45,8 +44,8 @@ export class UsersResolver {
     subject: User.name,
     fields: args.updateUserInput
   }))
-  @Mutation(() => User, { nullable: true })
-  async updateUser(
+  @Mutation(() => User, { name: 'updateUser', nullable: true })
+  async update(
     @Args('userUpdateInput') userUpdateInput: UserUpdateInput,
     @Args('avatarFile', { type: () => GraphQLUpload, nullable: true }, UploadTransform) avatar: string,
     @SelectionSet() selection: SelectionInput,
@@ -64,7 +63,7 @@ export class UsersResolver {
     subject: User.name,
     fields: { password: args.password }
   }))
-  @Mutation(() => User, { nullable: true })
+  @Mutation(() => User, { name: 'updateUserPassword', nullable: true })
   async updatePassword(
     @Args('id', { type: () => GraphQLUUID }) id: string,
     @Args('password') password: string,
@@ -74,13 +73,47 @@ export class UsersResolver {
     return await this.usersService.updatePassword(id, password, selection, authUser);
   }
 
+  @Throttle({
+    default: {
+      limit: 1,
+      ttl: minutes(2),
+      exceptionMessage: (info) => 'Need to wait ' + info.timeToExpire + ' seconds to send email again.'
+    }
+  })
+  @CheckPolicies(() => ({
+    action: Action.Update,
+    subject: User.name
+  }))
+  @Mutation(() => User, { name: 'updateUserVerificationCode', nullable: true })
+  async updateVerificationCode(
+    @Args('id', { type: () => GraphQLUUID }) id: string,
+    @SelectionSet() selection: SelectionInput,
+    @AuthUser() authUser: User
+  ) {
+    return await this.usersService.updateVerificationCode(id, selection, authUser);
+  }
+
+  @CheckPolicies(() => ({
+    action: Action.Update,
+    subject: User.name
+  }))
+  @Mutation(() => User, { name: 'verifyUser', nullable: true })
+  async verify(
+    @Args('id', { type: () => GraphQLUUID }) id: string,
+    @Args('code') code: string,
+    @SelectionSet() selection: SelectionInput,
+    @AuthUser() authUser: User
+  ) {
+    return await this.usersService.verify(id, code, selection, authUser);
+  }
+
   @CheckPolicies((args) => ({
     action: Action.Delete,
     subject: User.name,
     fields: { id: args.id }
   }))
-  @Mutation(() => GraphQLUUID)
-  async deleteUser(@Args('id', { type: () => GraphQLUUID }) id: string, @AuthUser() authUser: User) {
+  @Mutation(() => GraphQLUUID, { name: 'deleteUser' })
+  async delete(@Args('id', { type: () => GraphQLUUID }) id: string, @AuthUser() authUser: User) {
     return await this.usersService.delete(id, authUser);
   }
 
@@ -101,7 +134,7 @@ export class UsersResolver {
     fields: args.where
   }))
   @Query(() => [User], { name: 'users', nullable: 'items' })
-  async findAll(
+  async findMany(
     @Args('where', { type: () => [UserWhereInput], nullable: true }, TypeORMWhereTransform<User>)
     where: FindOptionsWhere<User>,
     @Args('order', { type: () => [UserOrderInput], nullable: true }, TypeORMOrderTransform<User>)
@@ -109,6 +142,6 @@ export class UsersResolver {
     @Args('pagination', { nullable: true }) pagination: PaginationInput,
     @SelectionSet() selection: SelectionInput
   ) {
-    return await this.usersService.findAll(where, order, pagination, selection);
+    return await this.usersService.findMany(where, order, pagination, selection);
   }
 }

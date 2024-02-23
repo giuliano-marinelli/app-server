@@ -28,13 +28,13 @@ export class SessionsResolver {
     subject: Session.name,
     fields: { id: args.id }
   }))
-  @Mutation(() => Session, { nullable: true })
-  async closeSession(
+  @Mutation(() => Session, { name: 'closeSession', nullable: true })
+  async close(
     @Args('id', { type: () => GraphQLUUID }) id: string,
     @SelectionSet() selection: SelectionInput,
     @AuthUser() authUser: User
   ) {
-    return await this.sessionsService.closeSession(id, selection, authUser);
+    return await this.sessionsService.close(id, selection, authUser);
   }
 
   @CheckPolicies(() => ({
@@ -56,7 +56,7 @@ export class SessionsResolver {
     fields: args.where
   }))
   @Query(() => [Session], { name: 'sessions', nullable: 'items' })
-  async findAll(
+  async findMany(
     @Args('where', { type: () => [SessionWhereInput], nullable: true }, TypeORMWhereTransform<Session>)
     where: FindOptionsWhere<Session>,
     @Args('order', { type: () => [SessionOrderInput], nullable: true }, TypeORMOrderTransform<Session>)
@@ -65,6 +65,6 @@ export class SessionsResolver {
     @SelectionSet() selection: SelectionInput,
     @AuthUser() authUser: User
   ) {
-    return await this.sessionsService.findAll(where, order, pagination, selection, authUser);
+    return await this.sessionsService.findMany(where, order, pagination, selection, authUser);
   }
 }

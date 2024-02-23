@@ -41,7 +41,7 @@ export class PoliciesGuard implements CanActivate {
     // sub selections set are showed as parent.child
     // example: user { name, email, sessions { _id, ip } }
     // selectionsSet = ['name', 'email', 'sessions._id', 'sessions.ip']
-    const selectionsSet = new SelectionInput(info.fieldNodes[0]?.selectionSet?.selections);
+    const selectionsSet = new SelectionInput(info);
 
     // check if user has permission to do the action of each policy
     policyHandlers.forEach((policy) => {

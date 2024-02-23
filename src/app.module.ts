@@ -1,8 +1,10 @@
 import { ApolloDriver } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ThrottlerModule, minutes } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
@@ -11,6 +13,8 @@ import { GraphQLError } from 'graphql';
 import { GraphQLEmailAddress, GraphQLURL, GraphQLUUID } from 'graphql-scalars';
 import { GraphQLUpload } from 'graphql-upload-ts';
 import { join } from 'path';
+
+import { GraphQLThrottlerGuard } from './throttler/throttler.guard';
 
 import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './casl/casl.module';
@@ -23,6 +27,15 @@ import { UsersModule } from './users/users.module';
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true
+    }),
+    ThrottlerModule.forRoot({
+      errorMessage: 'You have exceed the request limit, please try again later.',
+      throttlers: [
+        {
+          ttl: minutes(1),
+          limit: 1000
+        }
+      ]
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -45,8 +58,11 @@ import { UsersModule } from './users/users.module';
       playground: false,
       uploads: false,
       sortSchema: true,
+      context: ({ req, res }) => ({ req, res }),
       formatError: (error: GraphQLError) => {
-        // here we can format the error messages if we want
+        if (error.extensions?.originalError) {
+          return error.extensions.originalError;
+        }
         return error;
       },
       resolvers: {
@@ -74,6 +90,12 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     SessionsModule,
     SharedModule
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: GraphQLThrottlerGuard
+    }
   ]
 })
 export class AppModule {}

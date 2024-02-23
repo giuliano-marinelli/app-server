@@ -26,9 +26,6 @@ export class CaslFactory {
       // manage not includes filter
     });
 
-    if (user) console.info('\x1b[35m', 'AuthUser', user?.username, '(', user?.role, ')', '[', user?.id, ']');
-    else console.info('\x1b[36m', 'NO AuthUser');
-
     // PUBLIC
 
     // Users

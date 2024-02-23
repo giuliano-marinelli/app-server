@@ -5,6 +5,7 @@ import { PaginationInput, SelectionInput } from '@nestjs!/graphql-filter';
 
 import * as bcrypt from 'bcryptjs';
 import { Equal, FindOptionsOrder, FindOptionsWhere, Not, Repository } from 'typeorm';
+import { v4 as uuid } from 'uuid';
 
 import { Role, User, UserCreateInput, UserUpdateInput } from './entities/user.entity';
 
@@ -46,10 +47,10 @@ export class UsersService {
       throw new ForbiddenException('Cannot update users other than yourself.');
 
     // check if user exists
-    const found = await this.usersRepository.findOne({
+    const existent = await this.usersRepository.findOne({
       where: { id: userUpdateInput.id }
     });
-    if (!found) throw new ConflictException('User not found');
+    if (!existent) throw new ConflictException('User not found');
 
     // check if username already taken
     if (userUpdateInput.username) {
@@ -67,6 +68,13 @@ export class UsersService {
       if (existentEmail) throw new ConflictException('Email already taken.');
     }
 
+    // if email is being updated, unverify user
+    if (userUpdateInput.email && userUpdateInput.email != existent.email) {
+      userUpdateInput.verified = false;
+      userUpdateInput.verificationCode = null;
+      userUpdateInput.lastVerificationTry = null;
+    }
+
     await this.usersRepository.update({ id: userUpdateInput.id }, userUpdateInput);
     return await this.usersRepository.findOne({
       relations: selection?.getTypeORMRelations(),
@@ -77,13 +85,70 @@ export class UsersService {
   async updatePassword(id: string, password: string, selection: SelectionInput, authUser: User) {
     // only admin can update other users
     if (id != authUser.id && authUser.role != Role.ADMIN)
-      throw new ForbiddenException('Cannot update users other than yourself.');
+      throw new ForbiddenException('Cannot update password of users other than yourself.');
+
+    // check if user exists
+    const existent = await this.usersRepository.findOne({
+      where: { id: id }
+    });
+    if (!existent) throw new ConflictException('User not found');
 
     // hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     await this.usersRepository.update({ id: id }, { password: hashedPassword });
+    return await this.usersRepository.findOne({
+      relations: selection?.getTypeORMRelations(),
+      where: { id: id }
+    });
+  }
+
+  async updateVerificationCode(id: string, selection: SelectionInput, authUser: User) {
+    // only admin can update other users
+    if (id != authUser.id && authUser.role != Role.ADMIN)
+      throw new ForbiddenException('Cannot get verification code of users other than yourself.');
+
+    // check if user exists
+    const existent = await this.usersRepository.findOne({
+      where: { id: id }
+    });
+    if (!existent) throw new ConflictException('User not found');
+
+    // check if email is already verified
+    if (existent.verified) throw new ConflictException('Email is already verified.');
+
+    await this.usersRepository.update({ id: id }, { lastVerificationTry: new Date(), verificationCode: uuid() });
+
+    // TODO: send email with verification code
+
+    return await this.usersRepository.findOne({
+      relations: selection?.getTypeORMRelations(),
+      where: { id: id }
+    });
+  }
+
+  async verify(id: string, code: string, selection: SelectionInput, authUser: User) {
+    // only admin can update other users
+    if (id != authUser.id && authUser.role != Role.ADMIN)
+      throw new ForbiddenException('Cannot verify users other than yourself.');
+
+    // check if user exists
+    const existent = await this.usersRepository.findOne({
+      where: { id: id }
+    });
+    if (!existent) throw new ConflictException('User not found');
+
+    // check if email is already verified
+    if (existent.verified) throw new ConflictException('Email is already verified.');
+
+    // check if code is correct
+    if (existent.verificationCode != code) throw new ConflictException('Invalid verification code.');
+
+    await this.usersRepository.update({ id: id }, { verified: true });
+
+    // TODO: send email advising account email was verified
+
     return await this.usersRepository.findOne({
       relations: selection?.getTypeORMRelations(),
       where: { id: id }
@@ -106,7 +171,7 @@ export class UsersService {
     });
   }
 
-  async findAll(
+  async findMany(
     where: FindOptionsWhere<User>,
     order: FindOptionsOrder<User>,
     pagination: PaginationInput,

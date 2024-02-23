@@ -15,7 +15,7 @@ export class SessionsService {
     private sessionsRepository: Repository<Session>
   ) {}
 
-  async closeSession(id: string, selection: SelectionInput, authUser: User) {
+  async close(id: string, selection: SelectionInput, authUser: User) {
     const session = await this.sessionsRepository.findOne({
       where: Owner({ id: id }, 'user.id', authUser, [Role.ADMIN])
     });
@@ -38,7 +38,7 @@ export class SessionsService {
     });
   }
 
-  async findAll(
+  async findMany(
     where: FindOptionsWhere<Session>,
     order: FindOptionsOrder<Session>,
     pagination: PaginationInput,

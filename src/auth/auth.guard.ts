@@ -36,6 +36,8 @@ export class AuthGuard implements CanActivate {
   async canActivate(execContext: ExecutionContext): Promise<boolean> {
     const context = GqlExecutionContext.create(execContext);
 
+    const info = context.getInfo();
+
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass()
@@ -49,6 +51,7 @@ export class AuthGuard implements CanActivate {
     // if the controller route is marked as public and there's no provided token, we allow access but without user information
     // this allow us to change the behavior of the route if the user is authenticated or not in the casl policies
     if (!token && isPublic) {
+      console.info('\x1b[42m ' + info.fieldName + ' \x1b[0m', '\x1b[36mPUBLIC\x1b[0m');
       return true;
     }
 
@@ -103,6 +106,9 @@ export class AuthGuard implements CanActivate {
     // we're assigning the user to the request object here
     // so that we can access it in our route handlers
     request['user'] = user;
+
+    // prettier-ignore
+    console.info('\x1b[42m ' + info.fieldName + ' \x1b[0m', '\x1b[35m' + user?.username, '(', user?.role, ')', '[', user?.id, ']\x1b[0m');
 
     return true;
   }
