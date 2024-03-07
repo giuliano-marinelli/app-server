@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import * as bcrypt from 'bcryptjs';
 import * as DeviceDetector from 'device-detector-js';
+import { GraphQLError, GraphQLErrorOptions } from 'graphql';
 import { Repository } from 'typeorm';
 
 import { Session } from 'src/sessions/entities/session.entity';
@@ -13,6 +14,9 @@ import { SharedService } from 'src/shared/shared.service';
 
 @Injectable()
 export class AuthService {
+  private errorMessage: string = 'Failed authentication: ';
+  private errorOptions: GraphQLErrorOptions = { extensions: { code: 'UNAUTHORIZED' } };
+
   constructor(
     private jwtService: JwtService,
     private sharedService: SharedService,
@@ -81,5 +85,16 @@ export class AuthService {
     }
 
     return token;
+  }
+
+  async logout(context: any) {
+    const token = this.sharedService.extractTokenFromHeader(context.req);
+
+    const session = await this.sessionsRepository.findOneBy({ token: token });
+    if (!session) throw new GraphQLError(this.errorMessage + 'session not found', this.errorOptions);
+
+    await this.sessionsRepository.update({ token: token }, { closedAt: new Date() });
+
+    return true;
   }
 }

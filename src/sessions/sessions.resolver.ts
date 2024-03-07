@@ -14,7 +14,7 @@ import { Action } from 'src/casl/casl.factory';
 import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
-import { Session, SessionOrderInput, SessionWhereInput } from './entities/session.entity';
+import { Session, SessionOrderInput, SessionWhereInput, Sessions } from './entities/session.entity';
 import { User } from 'src/users/entities/user.entity';
 
 import { SessionsService } from './sessions.service';
@@ -55,14 +55,14 @@ export class SessionsResolver {
     subject: Session.name,
     fields: args.where
   }))
-  @Query(() => [Session], { name: 'sessions', nullable: 'items' })
+  @Query(() => Sessions, { name: 'sessions' })
   async findMany(
     @Args('where', { type: () => [SessionWhereInput], nullable: true }, TypeORMWhereTransform<Session>)
     where: FindOptionsWhere<Session>,
     @Args('order', { type: () => [SessionOrderInput], nullable: true }, TypeORMOrderTransform<Session>)
     order: FindOptionsOrder<Session>,
     @Args('pagination', { nullable: true }) pagination: PaginationInput,
-    @SelectionSet() selection: SelectionInput,
+    @SelectionSet({ root: 'set' }) selection: SelectionInput,
     @AuthUser() authUser: User
   ) {
     return await this.sessionsService.findMany(where, order, pagination, selection, authUser);

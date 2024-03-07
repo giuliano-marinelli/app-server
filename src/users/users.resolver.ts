@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { minutes } from '@nestjs/throttler';
+import { minutes, seconds } from '@nestjs/throttler';
 
 import {
   AuthUser,
@@ -20,7 +20,7 @@ import { Throttle } from 'src/throttler/decorators/throttler.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
 import { Profile } from './entities/profile.entity';
-import { User, UserCreateInput, UserOrderInput, UserUpdateInput, UserWhereInput } from './entities/user.entity';
+import { User, UserCreateInput, UserOrderInput, UserUpdateInput, UserWhereInput, Users } from './entities/user.entity';
 
 import { UsersService } from './users.service';
 
@@ -67,10 +67,11 @@ export class UsersResolver {
   async updatePassword(
     @Args('id', { type: () => GraphQLUUID }) id: string,
     @Args('password') password: string,
+    @Args('newPassword') newPassword: string,
     @SelectionSet() selection: SelectionInput,
     @AuthUser() authUser: User
   ) {
-    return await this.usersService.updatePassword(id, password, selection, authUser);
+    return await this.usersService.updatePassword(id, password, newPassword, selection, authUser);
   }
 
   @Throttle({
@@ -113,8 +114,33 @@ export class UsersResolver {
     fields: { id: args.id }
   }))
   @Mutation(() => GraphQLUUID, { name: 'deleteUser' })
-  async delete(@Args('id', { type: () => GraphQLUUID }) id: string, @AuthUser() authUser: User) {
-    return await this.usersService.delete(id, authUser);
+  async delete(
+    @Args('id', { type: () => GraphQLUUID }) id: string,
+    @Args('password') password: string,
+    @AuthUser() authUser: User
+  ) {
+    return await this.usersService.delete(id, password, authUser);
+  }
+
+  @Throttle({
+    default: {
+      limit: 1,
+      ttl: seconds(10),
+      exceptionMessage: (info) => 'Need to wait ' + info.timeToExpire + ' seconds to check password again.'
+    }
+  })
+  @CheckPolicies((args) => ({
+    action: Action.Read,
+    subject: User.name,
+    fields: { id: args.id }
+  }))
+  @Query(() => Boolean, { name: 'checkPasswordUser', nullable: true })
+  async checkPassword(
+    @Args('id', { type: () => GraphQLUUID }) id: string,
+    @Args('password') password: string,
+    @AuthUser() authUser: User
+  ) {
+    return await this.usersService.checkPassword(id, password, authUser);
   }
 
   @Public()
@@ -133,14 +159,14 @@ export class UsersResolver {
     subject: User.name,
     fields: args.where
   }))
-  @Query(() => [User], { name: 'users', nullable: 'items' })
+  @Query(() => Users, { name: 'users' })
   async findMany(
     @Args('where', { type: () => [UserWhereInput], nullable: true }, TypeORMWhereTransform<User>)
     where: FindOptionsWhere<User>,
     @Args('order', { type: () => [UserOrderInput], nullable: true }, TypeORMOrderTransform<User>)
     order: FindOptionsOrder<User>,
     @Args('pagination', { nullable: true }) pagination: PaginationInput,
-    @SelectionSet() selection: SelectionInput
+    @SelectionSet({ root: 'set' }) selection: SelectionInput
   ) {
     return await this.usersService.findMany(where, order, pagination, selection);
   }

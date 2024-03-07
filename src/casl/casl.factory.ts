@@ -54,7 +54,8 @@ export class CaslFactory {
       // Sessions
       // limited to logged user on service
       allow(Action.Read, Session.name);
-      forbid(Action.Read, Session.name, ['token']);
+      // forbid(Action.Read, Session.name, ['token']);
+      allow(Action.Filter, Session.name, ['id', 'user.id']);
       allow(Action.Update, Session.name, ['id']);
     }
 

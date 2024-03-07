@@ -2,6 +2,7 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 
 import { FilterField, FilterOrderType, FilterWhereType } from '@nestjs!/graphql-filter';
 
+import { IsUrl } from 'class-validator';
 import { GraphQLURL } from 'graphql-scalars';
 import { Column } from 'typeorm';
 
@@ -28,8 +29,9 @@ export class Profile {
   @Column({ nullable: true })
   location: string;
 
-  @Field(() => GraphQLURL, { nullable: true })
+  @Field({ nullable: true })
   @FilterField()
+  @IsUrl()
   @Column({ nullable: true })
   url: string;
 }

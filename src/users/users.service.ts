@@ -8,12 +8,15 @@ import { Equal, FindOptionsOrder, FindOptionsWhere, Not, Repository } from 'type
 import { v4 as uuid } from 'uuid';
 
 import { Role, User, UserCreateInput, UserUpdateInput } from './entities/user.entity';
+import { Session } from 'src/sessions/entities/session.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>
+    private usersRepository: Repository<User>,
+    @InjectRepository(Session)
+    private sessionsRepository: Repository<Session>
   ) {}
 
   async create(userCreateInput: UserCreateInput, selection: SelectionInput) {
@@ -33,6 +36,8 @@ export class UsersService {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(userCreateInput.password, salt);
     userCreateInput.password = hashedPassword;
+
+    // TODO: send email advising account was created
 
     const insert = await this.usersRepository.insert(userCreateInput);
     return await this.usersRepository.findOne({
@@ -68,11 +73,18 @@ export class UsersService {
       if (existentEmail) throw new ConflictException('Email already taken.');
     }
 
+    // if username is being updated, notify
+    if (userUpdateInput.username && userUpdateInput.username != existent.username) {
+      // TODO: send email advising username changed
+    }
+
     // if email is being updated, unverify user
     if (userUpdateInput.email && userUpdateInput.email != existent.email) {
       userUpdateInput.verified = false;
       userUpdateInput.verificationCode = null;
       userUpdateInput.lastVerificationTry = null;
+
+      // TODO: send email advising email changed
     }
 
     await this.usersRepository.update({ id: userUpdateInput.id }, userUpdateInput);
@@ -82,7 +94,7 @@ export class UsersService {
     });
   }
 
-  async updatePassword(id: string, password: string, selection: SelectionInput, authUser: User) {
+  async updatePassword(id: string, password: string, newPassword: string, selection: SelectionInput, authUser: User) {
     // only admin can update other users
     if (id != authUser.id && authUser.role != Role.ADMIN)
       throw new ForbiddenException('Cannot update password of users other than yourself.');
@@ -93,9 +105,15 @@ export class UsersService {
     });
     if (!existent) throw new ConflictException('User not found');
 
-    // hash password
+    // check if old password is correct
+    const passwordMatch = await bcrypt.compare(password, existent.password);
+    if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+
+    // hash new password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // TODO: send email advising password changed
 
     await this.usersRepository.update({ id: id }, { password: hashedPassword });
     return await this.usersRepository.findOne({
@@ -155,13 +173,42 @@ export class UsersService {
     });
   }
 
-  async delete(id: string, authUser: User) {
+  async delete(id: string, password: string, authUser: User) {
     // only admin can delete other users
     if (id != authUser.id && authUser.role != Role.ADMIN)
       throw new ForbiddenException('Cannot delete users other than yourself.');
 
+    // check if user exists
+    const existent = await this.usersRepository.findOne({
+      where: { id: id }
+    });
+    if (!existent) throw new ConflictException('User not found');
+
+    // check if password is correct
+    const passwordMatch = await bcrypt.compare(password, existent.password);
+    if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+
+    // close all sessions of the user
+    this.sessionsRepository.update({ user: { id: id } }, { closedAt: new Date() });
+
+    // TODO: send email advising account was deleted
+
     await this.usersRepository.softDelete({ id: id });
     return id;
+  }
+
+  async checkPassword(id: string, password: string, authUser: User) {
+    // only admin can check password of other users
+    if (id != authUser.id && authUser.role != Role.ADMIN)
+      throw new ForbiddenException('Cannot check password of users other than yourself.');
+
+    // check if user exists
+    const existent = await this.usersRepository.findOne({
+      where: { id: id }
+    });
+    if (!existent) throw new ConflictException('User not found');
+
+    return await bcrypt.compare(password, existent.password);
   }
 
   async findOne(id: string, selection: SelectionInput) {
@@ -177,12 +224,13 @@ export class UsersService {
     pagination: PaginationInput,
     selection: SelectionInput
   ) {
-    return await this.usersRepository.find({
+    const [set, count] = await this.usersRepository.findAndCount({
       relations: selection?.getTypeORMRelations(),
       where: where,
       order: order,
       skip: pagination ? (pagination.page - 1) * pagination.count : null,
       take: pagination ? pagination.count : null
     });
+    return { set, count };
   }
 }

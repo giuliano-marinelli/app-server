@@ -16,6 +16,7 @@ export class SessionsService {
   ) {}
 
   async close(id: string, selection: SelectionInput, authUser: User) {
+    // only admin can close sessions of other users
     const session = await this.sessionsRepository.findOne({
       where: Owner({ id: id }, 'user.id', authUser, [Role.ADMIN])
     });
@@ -45,12 +46,13 @@ export class SessionsService {
     selection: SelectionInput,
     authUser: User
   ) {
-    return await this.sessionsRepository.find({
+    const [set, count] = await this.sessionsRepository.findAndCount({
       relations: selection?.getTypeORMRelations(),
       where: Owner(where, 'user.id', authUser, [Role.ADMIN]),
       order: order,
       skip: pagination ? (pagination.page - 1) * pagination.count : null,
       take: pagination ? pagination.count : null
     });
+    return { set, count };
   }
 }

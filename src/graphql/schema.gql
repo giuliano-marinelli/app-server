@@ -114,9 +114,9 @@ scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/in
 type Mutation {
   closeSession(id: UUID!): Session
   createUser(userCreateInput: UserCreateInput!): User
-  deleteUser(id: UUID!): UUID!
+  deleteUser(id: UUID!, password: String!): UUID!
   updateUser(avatarFile: Upload, userUpdateInput: UserUpdateInput!): User
-  updateUserPassword(id: UUID!, password: String!): User
+  updateUserPassword(id: UUID!, newPassword: String!, password: String!): User
   updateUserVerificationCode(id: UUID!): User
   verifyUser(code: String!, id: UUID!): User
 }
@@ -144,7 +144,7 @@ type Profile {
   bio: String
   location: String
   name: String
-  url: URL
+  url: String
 }
 
 input ProfileInput {
@@ -152,7 +152,7 @@ input ProfileInput {
   bio: String
   location: String
   name: String
-  url: URL
+  url: String
 }
 
 """"""
@@ -174,12 +174,17 @@ input ProfileWhereInput {
 }
 
 type Query {
+  checkPasswordUser(id: UUID!, password: String!): Boolean
+
   """Login with username or email and password. Returns the token string."""
   login(password: String!, usernameOrEmail: String!): String!
+
+  """Logout the current user. Close current session of device."""
+  logout: Boolean!
   session(id: UUID!): Session
-  sessions(order: [SessionOrderInput!], pagination: PaginationInput, where: [SessionWhereInput!]): [Session]!
+  sessions(order: [SessionOrderInput!], pagination: PaginationInput, where: [SessionWhereInput!]): Sessions!
   user(id: UUID!): User
-  users(order: [UserOrderInput!], pagination: PaginationInput, where: [UserWhereInput!]): [User]!
+  users(order: [UserOrderInput!], pagination: PaginationInput, where: [UserWhereInput!]): Users!
 }
 
 """Defines wich permissions user has."""
@@ -209,6 +214,7 @@ input SessionOrderInput {
   closedAt: OrderDirection
   createdAt: OrderDirection
   device: DeviceOrderInput
+  id: OrderDirection
   lastActivity: OrderDirection
   token: OrderDirection
   updatedAt: OrderDirection
@@ -221,10 +227,17 @@ input SessionWhereInput {
   closedAt: DateTimeWhereInput
   createdAt: DateTimeWhereInput
   device: DeviceWhereInput
+  id: StringWhereInput
   lastActivity: DateTimeWhereInput
   token: StringWhereInput
   updatedAt: DateTimeWhereInput
   user: UserWhereInput
+}
+
+""""""
+type Sessions {
+  count: Int!
+  set: [Session!]
 }
 
 """Where input for string type"""
@@ -256,11 +269,6 @@ input StringWhereInput {
   """List of OR conditions"""
   or: [StringWhereInput!]
 }
-
-"""
-A field whose value conforms to the standard URL format as specified in RFC3986: https://www.ietf.org/rfc/rfc3986.txt.
-"""
-scalar URL
 
 """
 A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
@@ -302,6 +310,7 @@ input UserOrderInput {
   createdAt: OrderDirection
   deletedAt: OrderDirection
   email: OrderDirection
+  id: OrderDirection
   lastVerificationTry: OrderDirection
   profile: ProfileOrderInput
   role: OrderDirection
@@ -328,6 +337,7 @@ input UserWhereInput {
   createdAt: DateTimeWhereInput
   deletedAt: DateTimeWhereInput
   email: StringWhereInput
+  id: StringWhereInput
   lastVerificationTry: DateTimeWhereInput
   profile: ProfileWhereInput
   role: StringWhereInput
@@ -336,4 +346,10 @@ input UserWhereInput {
   username: StringWhereInput
   verificationCode: StringWhereInput
   verified: BooleanWhereInput
+}
+
+""""""
+type Users {
+  count: Int!
+  set: [User!]
 }

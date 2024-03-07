@@ -39,8 +39,8 @@ export class PoliciesGuard implements CanActivate {
 
     // get the selections set as a array of string
     // sub selections set are showed as parent.child
-    // example: user { name, email, sessions { _id, ip } }
-    // selectionsSet = ['name', 'email', 'sessions._id', 'sessions.ip']
+    // example: user { name, email, sessions { id, ip } }
+    // selectionsSet = ['name', 'email', 'sessions.id', 'sessions.ip']
     const selectionsSet = new SelectionInput(info);
 
     // check if user has permission to do the action of each policy
@@ -89,7 +89,7 @@ export class PoliciesGuard implements CanActivate {
 
         // check if user has permission to do the action on the subject fields
         Object.keys(plainFields)?.forEach((field) => {
-          if (field != '_id' && !ability.can(action, subject, field)) {
+          if (field != 'id' && !ability.can(action, subject, field)) {
             throw new ForbiddenException(
               `Forbidden request, you don't have permissions to ${action} the ${field} of the ${subject}.`
             );

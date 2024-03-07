@@ -1,5 +1,7 @@
 import { Args, Context, Query, Resolver } from '@nestjs/graphql';
 
+import { AuthUser } from '@nestjs!/graphql-filter';
+
 import { Public } from './decorators/public.decorator';
 
 import { AuthService } from './auth.service';
@@ -19,5 +21,13 @@ export class AuthResolver {
     @Context() context: any
   ) {
     return await this.authService.login(usernameOrEmail, password, context);
+  }
+
+  @Query(() => Boolean, {
+    name: 'logout',
+    description: 'Logout the current user. Close current session of device.'
+  })
+  async logout(@Context() context: any) {
+    return await this.authService.logout(context);
   }
 }

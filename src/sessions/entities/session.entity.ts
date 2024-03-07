@@ -1,6 +1,6 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 
-import { FilterField, FilterOrderType, FilterWhereType } from '@nestjs!/graphql-filter';
+import { FilterField, FilterOrderType, FilterWhereType, Many } from '@nestjs!/graphql-filter';
 
 import { GraphQLUUID } from 'graphql-scalars';
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
@@ -13,6 +13,7 @@ import { User, UserOrderInput, UserWhereInput } from 'src/users/entities/user.en
 @Entity()
 export class Session {
   @Field(() => GraphQLUUID)
+  @FilterField()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -62,3 +63,6 @@ export class SessionWhereInput {}
 
 @FilterOrderType(Session)
 export class SessionOrderInput {}
+
+@Many(Session, { setName: 'set' })
+export class Sessions {}

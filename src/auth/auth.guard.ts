@@ -1,10 +1,11 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import { GraphQLError, GraphQLErrorOptions } from 'graphql';
 import * as _ from 'lodash';
 import { Repository } from 'typeorm';
 import * as validateUUID from 'uuid-validate';
@@ -32,6 +33,7 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   private errorMessage: string = 'Failed authentication: ';
+  private errorOptions: GraphQLErrorOptions = { extensions: { code: 'UNAUTHORIZED' } };
 
   async canActivate(execContext: ExecutionContext): Promise<boolean> {
     const context = GqlExecutionContext.create(execContext);
@@ -55,29 +57,34 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    if (!token) throw new UnauthorizedException(this.errorMessage + 'authorization not found');
+    if (!token) throw new GraphQLError(this.errorMessage + 'authorization not found', this.errorOptions);
 
     // verify jwt token is valid
-    const decodedToken = await this.jwtService.verifyAsync(token, {
-      secret: this.configService.get<string>('SECRET_TOKEN')
-    });
+    let decodedToken: any;
+    try {
+      decodedToken = await this.jwtService.verifyAsync(token, {
+        secret: this.configService.get<string>('SECRET_TOKEN')
+      });
+    } catch (error) {
+      throw new GraphQLError(this.errorMessage + 'parsing token error', this.errorOptions);
+    }
 
     // check if token has user id and device
     if (!decodedToken?.id || !decodedToken?.device || !validateUUID(decodedToken?.id))
-      throw new UnauthorizedException(this.errorMessage + 'invalid token');
+      throw new GraphQLError(this.errorMessage + 'invalid token', this.errorOptions);
 
     // find user with token user id
     const user = await this.usersRepository.findOne({
       relations: { sessions: true },
       where: { id: decodedToken.id }
     });
-    if (!user) throw new UnauthorizedException(this.errorMessage + 'user not found');
+    if (!user) throw new GraphQLError(this.errorMessage + 'user not found', this.errorOptions);
 
     // find session with same token
     const session = await this.sessionsRepository.findOneBy({ token: token });
-    if (!session) throw new UnauthorizedException(this.errorMessage + 'session not found');
-    if (session.closedAt) throw new UnauthorizedException(this.errorMessage + 'session is closed');
-    if (session.blockedAt) throw new UnauthorizedException(this.errorMessage + 'session is blocked');
+    if (!session) throw new GraphQLError(this.errorMessage + 'session not found', this.errorOptions);
+    if (session.closedAt) throw new GraphQLError(this.errorMessage + 'session is closed', this.errorOptions);
+    if (session.blockedAt) throw new GraphQLError(this.errorMessage + 'session is blocked', this.errorOptions);
 
     // detect the device from request header user-agent
     const deviceDetector = new DeviceDetector();
@@ -96,7 +103,7 @@ export class AuthGuard implements CanActivate {
 
       // HERE WE HAVE TO NOTIFY WITH EMAIL OR PUSH NOTIFICATION
 
-      throw new UnauthorizedException(this.errorMessage + 'devices not match');
+      throw new GraphQLError(this.errorMessage + 'devices not match', this.errorOptions);
     }
 
     // update session last activity

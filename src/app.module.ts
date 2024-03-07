@@ -10,7 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
 import { GraphQLError } from 'graphql';
-import { GraphQLEmailAddress, GraphQLURL, GraphQLUUID } from 'graphql-scalars';
+import { GraphQLEmailAddress, GraphQLUUID } from 'graphql-scalars';
 import { GraphQLUpload } from 'graphql-upload-ts';
 import { join } from 'path';
 
@@ -60,16 +60,12 @@ import { UsersModule } from './users/users.module';
       sortSchema: true,
       context: ({ req, res }) => ({ req, res }),
       formatError: (error: GraphQLError) => {
-        if (error.extensions?.originalError) {
-          return error.extensions.originalError;
-        }
         return error;
       },
       resolvers: {
         UUID: GraphQLUUID,
         Upload: GraphQLUpload,
-        EmailAddress: GraphQLEmailAddress,
-        URL: GraphQLURL
+        EmailAddress: GraphQLEmailAddress
       }
     }),
     ServeStaticModule.forRoot(

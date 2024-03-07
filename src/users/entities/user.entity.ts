@@ -9,7 +9,7 @@ import {
   registerEnumType
 } from '@nestjs/graphql';
 
-import { FilterField, FilterOrderType, FilterWhereType } from '@nestjs!/graphql-filter';
+import { FilterField, FilterOrderType, FilterWhereType, Many } from '@nestjs!/graphql-filter';
 
 import { IsEmail, MaxLength, MinLength } from 'class-validator';
 import { GraphQLEmailAddress, GraphQLUUID } from 'graphql-scalars';
@@ -50,13 +50,14 @@ registerEnumType(Role, {
 @Entity()
 export class User {
   @Field(() => GraphQLUUID)
+  @FilterField()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Field()
   @FilterField()
   @Column()
-  @Unique(['username'])
+  // @Unique(['username'])
   @MinLength(4)
   @MaxLength(30)
   username: string;
@@ -64,7 +65,7 @@ export class User {
   @Field(() => GraphQLEmailAddress)
   @FilterField()
   @Column() // lowercase: true, trim: true
-  @Unique(['email'])
+  // @Unique(['email'])
   @IsEmail()
   @MaxLength(100)
   email: string;
@@ -139,3 +140,6 @@ export class UserWhereInput {}
 
 @FilterOrderType(User)
 export class UserOrderInput {}
+
+@Many(User, { setName: 'set' })
+export class Users {}
