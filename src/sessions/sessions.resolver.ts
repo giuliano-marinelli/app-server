@@ -23,10 +23,9 @@ import { SessionsService } from './sessions.service';
 export class SessionsResolver {
   constructor(private readonly sessionsService: SessionsService) {}
 
-  @CheckPolicies((args) => ({
+  @CheckPolicies(() => ({
     action: Action.Update,
-    subject: Session.name,
-    fields: { id: args.id }
+    subject: Session.name
   }))
   @Mutation(() => Session, { name: 'closeSession', nullable: true })
   async close(

@@ -106,19 +106,88 @@ input DeviceWhereInput {
   type: StringWhereInput
 }
 
+type Email {
+  address: EmailAddress!
+  createdAt: DateTime
+  deletedAt: DateTime
+  id: UUID!
+  lastVerificationTry: DateTime
+  updatedAt: DateTime
+  user: User
+  verificationCode: String
+  verified: Boolean
+}
+
 """
 A field whose value conforms to the standard internet email address format as specified in HTML Spec: https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address.
 """
 scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
 
+input EmailCreateInput {
+  address: EmailAddress!
+  user: UserRefInput!
+}
+
+input EmailInput {
+  address: EmailAddress!
+  createdAt: DateTime
+  deletedAt: DateTime
+  id: UUID!
+  lastVerificationTry: DateTime
+  updatedAt: DateTime
+  user: UserInput
+  verificationCode: String
+  verified: Boolean
+}
+
+""""""
+input EmailOrderInput {
+  address: OrderDirection
+  createdAt: OrderDirection
+  deletedAt: OrderDirection
+  id: OrderDirection
+  lastVerificationTry: OrderDirection
+  updatedAt: OrderDirection
+  user: UserOrderInput
+  verificationCode: OrderDirection
+  verified: OrderDirection
+}
+
+input EmailRefInput {
+  id: UUID!
+}
+
+""""""
+input EmailWhereInput {
+  address: StringWhereInput
+  createdAt: DateTimeWhereInput
+  deletedAt: DateTimeWhereInput
+  id: StringWhereInput
+  lastVerificationTry: DateTimeWhereInput
+  updatedAt: DateTimeWhereInput
+  user: UserWhereInput
+  verificationCode: StringWhereInput
+  verified: BooleanWhereInput
+}
+
+""""""
+type Emails {
+  count: Int!
+  set: [Email!]
+}
+
 type Mutation {
   closeSession(id: UUID!): Session
+  createEmail(emailCreateInput: EmailCreateInput!): Email
   createUser(userCreateInput: UserCreateInput!): User
+  deleteEmail(code: String!, id: UUID!, password: String!): UUID!
   deleteUser(id: UUID!, password: String!): UUID!
+  updateEmailVerificationCode(id: UUID!): Email
   updateUser(avatarFile: Upload, userUpdateInput: UserUpdateInput!): User
   updateUserPassword(id: UUID!, newPassword: String!, password: String!): User
+  updateUserPrimaryEmail(code: String!, email: EmailRefInput!, id: UUID!, password: String!): User
   updateUserVerificationCode(id: UUID!): User
-  verifyUser(code: String!, id: UUID!): User
+  verifyEmail(code: String!, id: UUID!): Email
 }
 
 """Defines the order direction."""
@@ -144,6 +213,7 @@ type Profile {
   bio: String
   location: String
   name: String
+  publicEmail: Email
   url: String
 }
 
@@ -152,6 +222,7 @@ input ProfileInput {
   bio: String
   location: String
   name: String
+  publicEmail: EmailInput
   url: String
 }
 
@@ -161,6 +232,7 @@ input ProfileOrderInput {
   bio: OrderDirection
   location: OrderDirection
   name: OrderDirection
+  publicEmail: OrderDirection
   url: OrderDirection
 }
 
@@ -170,11 +242,17 @@ input ProfileWhereInput {
   bio: StringWhereInput
   location: StringWhereInput
   name: StringWhereInput
+  publicEmail: StringWhereInput
   url: StringWhereInput
 }
 
 type Query {
-  checkPasswordUser(id: UUID!, password: String!): Boolean
+  checkEmailAddressExists(address: String!): Boolean
+  checkUserPassword(id: UUID!, password: String!): Boolean
+  checkUserUsernameExists(username: String!): Boolean
+  checkUserVerificationCode(code: String!, id: UUID!): Boolean
+  email(id: UUID!): Email
+  emails(order: [EmailOrderInput!], pagination: PaginationInput, where: [EmailWhereInput!]): Emails!
 
   """Login with username or email and password. Returns the token string."""
   login(password: String!, usernameOrEmail: String!): String!
@@ -206,6 +284,18 @@ type Session {
   token: String!
   updatedAt: DateTime!
   user: User
+}
+
+input SessionInput {
+  blockedAt: DateTime
+  closedAt: DateTime
+  createdAt: DateTime!
+  device: DeviceInput
+  id: UUID!
+  lastActivity: DateTime! = "2024-03-12T20:14:23.680Z"
+  token: String!
+  updatedAt: DateTime!
+  user: UserInput
 }
 
 """"""
@@ -279,73 +369,86 @@ scalar UUID
 scalar Upload
 
 type User {
-  createdAt: DateTime!
+  createdAt: DateTime
   deletedAt: DateTime
-  email: EmailAddress!
+  emails: [Email!]
   id: UUID!
   lastVerificationTry: DateTime
   password: String!
+  primaryEmail: Email
   profile: Profile
   role: Role
   sessions: [Session!]
-  updatedAt: DateTime!
+  updatedAt: DateTime
   username: String!
   verificationCode: String
-  verified: Boolean
 }
 
 input UserCreateInput {
   email: EmailAddress!
-  lastVerificationTry: DateTime
   password: String!
   profile: ProfileInput
   role: Role
   username: String!
+}
+
+input UserInput {
+  createdAt: DateTime
+  deletedAt: DateTime
+  emails: [EmailInput!]
+  id: UUID!
+  lastVerificationTry: DateTime
+  password: String!
+  primaryEmail: EmailInput
+  profile: ProfileInput
+  role: Role
+  sessions: [SessionInput!]
+  updatedAt: DateTime
+  username: String!
   verificationCode: String
-  verified: Boolean
 }
 
 """"""
 input UserOrderInput {
   createdAt: OrderDirection
   deletedAt: OrderDirection
-  email: OrderDirection
+  emails: EmailOrderInput
   id: OrderDirection
   lastVerificationTry: OrderDirection
+  primaryEmail: EmailOrderInput
   profile: ProfileOrderInput
   role: OrderDirection
   sessions: SessionOrderInput
   updatedAt: OrderDirection
   username: OrderDirection
   verificationCode: OrderDirection
-  verified: OrderDirection
+}
+
+input UserRefInput {
+  id: UUID!
 }
 
 input UserUpdateInput {
-  email: EmailAddress
   id: UUID!
-  lastVerificationTry: DateTime
   profile: ProfileInput
   role: Role
   username: String
-  verificationCode: String
-  verified: Boolean
 }
 
 """"""
 input UserWhereInput {
   createdAt: DateTimeWhereInput
   deletedAt: DateTimeWhereInput
-  email: StringWhereInput
+  emails: EmailWhereInput
   id: StringWhereInput
   lastVerificationTry: DateTimeWhereInput
+  primaryEmail: EmailWhereInput
   profile: ProfileWhereInput
   role: StringWhereInput
   sessions: SessionWhereInput
   updatedAt: DateTimeWhereInput
   username: StringWhereInput
   verificationCode: StringWhereInput
-  verified: BooleanWhereInput
 }
 
 """"""

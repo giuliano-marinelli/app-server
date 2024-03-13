@@ -14,10 +14,12 @@ import { GraphQLEmailAddress, GraphQLUUID } from 'graphql-scalars';
 import { GraphQLUpload } from 'graphql-upload-ts';
 import { join } from 'path';
 
+import { CaslFactory } from './casl/casl.factory';
 import { GraphQLThrottlerGuard } from './throttler/throttler.guard';
 
 import { AuthModule } from './auth/auth.module';
 import { CaslModule } from './casl/casl.module';
+import { EmailsModule } from './emails/emails.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { SharedModule } from './shared/shared.module';
 import { UsersModule } from './users/users.module';
@@ -58,8 +60,8 @@ import { UsersModule } from './users/users.module';
       playground: false,
       uploads: false,
       sortSchema: true,
-      context: ({ req, res }) => ({ req, res }),
-      formatError: (error: GraphQLError) => {
+      context: ({ req, res }) => ({ req, res, casl: new CaslFactory() }),
+      formatError: (error: GraphQLError, origError: any) => {
         return error;
       },
       resolvers: {
@@ -85,6 +87,7 @@ import { UsersModule } from './users/users.module';
     CaslModule,
     UsersModule,
     SessionsModule,
+    EmailsModule,
     SharedModule
   ],
   providers: [

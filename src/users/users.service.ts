@@ -1,13 +1,14 @@
 import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { minutes } from '@nestjs/throttler';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 
 import { PaginationInput, SelectionInput } from '@nestjs!/graphql-filter';
 
 import * as bcrypt from 'bcryptjs';
-import { Equal, FindOptionsOrder, FindOptionsWhere, Not, Repository } from 'typeorm';
-import { v4 as uuid } from 'uuid';
+import { EntityManager, Equal, FindOptionsOrder, FindOptionsWhere, Not, Repository } from 'typeorm';
 
 import { Role, User, UserCreateInput, UserUpdateInput } from './entities/user.entity';
+import { Email, EmailRefInput } from 'src/emails/entities/email.entity';
 import { Session } from 'src/sessions/entities/session.entity';
 
 @Injectable()
@@ -15,8 +16,10 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-    @InjectRepository(Session)
-    private sessionsRepository: Repository<Session>
+    @InjectRepository(Email)
+    private emailsRepository: Repository<Email>,
+    @InjectEntityManager()
+    private entityManager: EntityManager
   ) {}
 
   async create(userCreateInput: UserCreateInput, selection: SelectionInput) {
@@ -28,7 +31,7 @@ export class UsersService {
 
     // check if email already taken
     const existentEmail = await this.usersRepository.findOne({
-      where: { email: userCreateInput.email }
+      where: { emails: { address: userCreateInput.email, verified: true } }
     });
     if (existentEmail) throw new ConflictException('Email already taken.');
 
@@ -37,12 +40,42 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(userCreateInput.password, salt);
     userCreateInput.password = hashedPassword;
 
-    // TODO: send email advising account was created
+    let userInsert;
 
-    const insert = await this.usersRepository.insert(userCreateInput);
+    // create user and add email
+    await this.entityManager.transaction(async (manager) => {
+      const usersRepository = manager.getRepository(User);
+      const emailsRepository = manager.getRepository(Email);
+
+      // create user
+      userInsert = await usersRepository.insert(userCreateInput);
+
+      // check if user was created
+      if (userInsert?.identifiers[0]?.id) {
+        // add email to user
+        const emailInsert = await emailsRepository.insert({
+          address: userCreateInput.email,
+          user: { id: userInsert.identifiers[0].id }
+        });
+
+        // set email as primary and default public email
+        if (emailInsert?.identifiers[0]?.id) {
+          await usersRepository.update(
+            { id: userInsert.identifiers[0].id },
+            {
+              primaryEmail: { id: emailInsert.identifiers[0].id },
+              profile: { publicEmail: { id: emailInsert.identifiers[0].id } }
+            }
+          );
+        }
+
+        // TODO: send email advising account was created
+      }
+    });
+
     return await this.usersRepository.findOne({
-      relations: selection?.getTypeORMRelations(),
-      where: { id: insert.identifiers[0].id }
+      relations: selection?.getRelations(),
+      where: { id: userInsert.identifiers[0].id }
     });
   }
 
@@ -55,7 +88,7 @@ export class UsersService {
     const existent = await this.usersRepository.findOne({
       where: { id: userUpdateInput.id }
     });
-    if (!existent) throw new ConflictException('User not found');
+    if (!existent) throw new ConflictException('User not found.');
 
     // check if username already taken
     if (userUpdateInput.username) {
@@ -65,12 +98,16 @@ export class UsersService {
       if (existentUsername) throw new ConflictException('Username already taken.');
     }
 
-    // check if email already taken
-    if (userUpdateInput.email) {
-      const existentEmail = await this.usersRepository.findOne({
-        where: [{ id: Not(Equal(userUpdateInput.id)), email: userUpdateInput.email }]
+    // check if profile public email is of your own and is verified
+    if (userUpdateInput.profile?.publicEmail?.id) {
+      const existentEmail = await this.emailsRepository.findOne({
+        where: {
+          id: userUpdateInput.profile.publicEmail.id,
+          user: { id: userUpdateInput.id },
+          verified: true
+        }
       });
-      if (existentEmail) throw new ConflictException('Email already taken.');
+      if (!existentEmail) throw new ConflictException('Public email not found or not verified.');
     }
 
     // if username is being updated, notify
@@ -78,19 +115,44 @@ export class UsersService {
       // TODO: send email advising username changed
     }
 
-    // if email is being updated, unverify user
-    if (userUpdateInput.email && userUpdateInput.email != existent.email) {
-      userUpdateInput.verified = false;
-      userUpdateInput.verificationCode = null;
-      userUpdateInput.lastVerificationTry = null;
-
-      // TODO: send email advising email changed
-    }
-
     await this.usersRepository.update({ id: userUpdateInput.id }, userUpdateInput);
     return await this.usersRepository.findOne({
-      relations: selection?.getTypeORMRelations(),
+      relations: selection?.getRelations(),
       where: { id: userUpdateInput.id }
+    });
+  }
+
+  async updateVerificationCode(id: string, selection: SelectionInput, authUser: User) {
+    // only admin can update other users
+    if (id != authUser.id && authUser.role != Role.ADMIN)
+      throw new ForbiddenException('Cannot update password of users other than yourself.');
+
+    // check if user exists
+    const existent = await this.usersRepository.findOne({
+      where: { id: id }
+    });
+    if (!existent) throw new ConflictException('User not found.');
+
+    // check if last verification try was less than 2 minutes ago
+    // if (existent.lastVerificationTry && new Date().getTime() - existent.lastVerificationTry.getTime() < minutes(2))
+    //   throw new ConflictException(
+    //     'Need to wait ' +
+    //       ((new Date().getTime() - existent.lastVerificationTry.getTime()) / 1000).toFixed() +
+    //       ' seconds to send email again.'
+    //   );
+
+    // generate a 6 characters long alphanumeric code if it does not exist
+    const code = existent.verificationCode
+      ? existent.verificationCode
+      : Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    await this.usersRepository.update({ id: id }, { verificationCode: code, lastVerificationTry: new Date() });
+
+    // TODO: send email with verification code to primary email
+
+    return await this.usersRepository.findOne({
+      relations: selection?.getRelations(),
+      where: { id: id }
     });
   }
 
@@ -103,7 +165,7 @@ export class UsersService {
     const existent = await this.usersRepository.findOne({
       where: { id: id }
     });
-    if (!existent) throw new ConflictException('User not found');
+    if (!existent) throw new ConflictException('User not found.');
 
     // check if old password is correct
     const passwordMatch = await bcrypt.compare(password, existent.password);
@@ -117,58 +179,49 @@ export class UsersService {
 
     await this.usersRepository.update({ id: id }, { password: hashedPassword });
     return await this.usersRepository.findOne({
-      relations: selection?.getTypeORMRelations(),
+      relations: selection?.getRelations(),
       where: { id: id }
     });
   }
 
-  async updateVerificationCode(id: string, selection: SelectionInput, authUser: User) {
+  async updatePrimaryEmail(
+    id: string,
+    password: string,
+    code: string,
+    email: EmailRefInput,
+    selection: SelectionInput,
+    authUser: User
+  ) {
     // only admin can update other users
     if (id != authUser.id && authUser.role != Role.ADMIN)
-      throw new ForbiddenException('Cannot get verification code of users other than yourself.');
+      throw new ForbiddenException('Cannot update primary email of users other than yourself.');
 
-    // check if user exists
+    // check if user exists and is owner of the email and email is verified
     const existent = await this.usersRepository.findOne({
-      where: { id: id }
+      where: { id: id, emails: { id: email.id, verified: true } }
     });
-    if (!existent) throw new ConflictException('User not found');
+    if (!existent) throw new ConflictException('User or verified email not found.');
 
-    // check if email is already verified
-    if (existent.verified) throw new ConflictException('Email is already verified.');
-
-    await this.usersRepository.update({ id: id }, { lastVerificationTry: new Date(), verificationCode: uuid() });
-
-    // TODO: send email with verification code
-
-    return await this.usersRepository.findOne({
-      relations: selection?.getTypeORMRelations(),
-      where: { id: id }
-    });
-  }
-
-  async verify(id: string, code: string, selection: SelectionInput, authUser: User) {
-    // only admin can update other users
-    if (id != authUser.id && authUser.role != Role.ADMIN)
-      throw new ForbiddenException('Cannot verify users other than yourself.');
-
-    // check if user exists
-    const existent = await this.usersRepository.findOne({
-      where: { id: id }
-    });
-    if (!existent) throw new ConflictException('User not found');
-
-    // check if email is already verified
-    if (existent.verified) throw new ConflictException('Email is already verified.');
+    // check if password is correct
+    const passwordMatch = await bcrypt.compare(password, existent.password);
+    if (!passwordMatch) throw new ConflictException('Password is incorrect.');
 
     // check if code is correct
     if (existent.verificationCode != code) throw new ConflictException('Invalid verification code.');
 
-    await this.usersRepository.update({ id: id }, { verified: true });
+    // check if verification code is expired
+    if (new Date().getTime() - existent.lastVerificationTry.getTime() > minutes(2))
+      throw new ConflictException('Verification code expired.');
 
-    // TODO: send email advising account email was verified
+    // TODO: send email advising primary email changed
 
+    // nullify verification code and set new email as primary
+    await this.usersRepository.update(
+      { id: id },
+      { primaryEmail: { id: email.id }, verificationCode: null, lastVerificationTry: null }
+    );
     return await this.usersRepository.findOne({
-      relations: selection?.getTypeORMRelations(),
+      relations: selection?.getRelations(),
       where: { id: id }
     });
   }
@@ -182,19 +235,40 @@ export class UsersService {
     const existent = await this.usersRepository.findOne({
       where: { id: id }
     });
-    if (!existent) throw new ConflictException('User not found');
+    if (!existent) throw new ConflictException('User not found.');
 
     // check if password is correct
     const passwordMatch = await bcrypt.compare(password, existent.password);
     if (!passwordMatch) throw new ConflictException('Password is incorrect.');
 
-    // close all sessions of the user
-    this.sessionsRepository.update({ user: { id: id } }, { closedAt: new Date() });
+    // delete user and close all sessions
+    await this.entityManager.transaction(async (manager) => {
+      const usersRepository = manager.getRepository(User);
+      const sessionsRepository = manager.getRepository(Session);
 
-    // TODO: send email advising account was deleted
+      // close all sessions of the user
+      sessionsRepository.update({ user: { id: id } }, { closedAt: new Date() });
 
-    await this.usersRepository.softDelete({ id: id });
+      // TODO: send email advising account was deleted
+
+      await usersRepository.softDelete({ id: id });
+    });
+
     return id;
+  }
+
+  async checkVerificationCode(id: string, code: string, authUser: User) {
+    // only admin can check verification code of other users
+    if (id != authUser.id && authUser.role != Role.ADMIN)
+      throw new ForbiddenException('Cannot check verification code of users other than yourself.');
+
+    // check if user exists
+    const existent = await this.usersRepository.findOne({
+      where: { id: id }
+    });
+    if (!existent) throw new ConflictException('User not found.');
+
+    return existent.verificationCode == code;
   }
 
   async checkPassword(id: string, password: string, authUser: User) {
@@ -206,14 +280,21 @@ export class UsersService {
     const existent = await this.usersRepository.findOne({
       where: { id: id }
     });
-    if (!existent) throw new ConflictException('User not found');
+    if (!existent) throw new ConflictException('User not found.');
 
     return await bcrypt.compare(password, existent.password);
   }
 
+  async checkUsernameExists(username: string) {
+    const [set, count] = await this.usersRepository.findAndCount({
+      where: { username: username }
+    });
+    return count > 0;
+  }
+
   async findOne(id: string, selection: SelectionInput) {
     return await this.usersRepository.findOne({
-      relations: selection?.getTypeORMRelations(),
+      relations: selection?.getRelations(),
       where: { id: id }
     });
   }
@@ -225,12 +306,14 @@ export class UsersService {
     selection: SelectionInput
   ) {
     const [set, count] = await this.usersRepository.findAndCount({
-      relations: selection?.getTypeORMRelations(),
+      relations: selection?.getRelations(),
       where: where,
       order: order,
       skip: pagination ? (pagination.page - 1) * pagination.count : null,
       take: pagination ? pagination.count : null
     });
+
+    console.log('FindUsers', set);
     return { set, count };
   }
 }

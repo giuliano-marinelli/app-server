@@ -27,14 +27,14 @@ export class SessionsService {
       closedAt: new Date()
     });
     return await this.sessionsRepository.findOne({
-      relations: selection?.getTypeORMRelations(),
+      relations: selection?.getRelations(),
       where: Owner({ id: id }, 'user.id', authUser, [Role.ADMIN])
     });
   }
 
   async findOne(id: string, selection: SelectionInput, authUser: User) {
     return await this.sessionsRepository.findOne({
-      relations: selection?.getTypeORMRelations(),
+      relations: selection?.getRelations(),
       where: Owner({ id: id }, 'user.id', authUser, [Role.ADMIN])
     });
   }
@@ -47,7 +47,7 @@ export class SessionsService {
     authUser: User
   ) {
     const [set, count] = await this.sessionsRepository.findAndCount({
-      relations: selection?.getTypeORMRelations(),
+      relations: selection?.getRelations(),
       where: Owner(where, 'user.id', authUser, [Role.ADMIN]),
       order: order,
       skip: pagination ? (pagination.page - 1) * pagination.count : null,

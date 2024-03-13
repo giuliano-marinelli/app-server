@@ -21,6 +21,7 @@ import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
 import { Profile } from './entities/profile.entity';
 import { User, UserCreateInput, UserOrderInput, UserUpdateInput, UserWhereInput, Users } from './entities/user.entity';
+import { EmailRefInput } from 'src/emails/entities/email.entity';
 
 import { UsersService } from './users.service';
 
@@ -32,17 +33,19 @@ export class UsersResolver {
   @CheckPolicies((args) => ({
     action: Action.Create,
     subject: User.name,
-    fields: args.createUserInput
+    fields: args.userCreateInput
   }))
   @Mutation(() => User, { name: 'createUser', nullable: true })
   async create(@Args('userCreateInput') userCreateInput: UserCreateInput, @SelectionSet() selection: SelectionInput) {
+    console.log('userCreateInput', userCreateInput);
+
     return await this.usersService.create(userCreateInput, selection);
   }
 
   @CheckPolicies((args) => ({
     action: Action.Update,
     subject: User.name,
-    fields: args.updateUserInput
+    fields: args.userUpdateInput
   }))
   @Mutation(() => User, { name: 'updateUser', nullable: true })
   async update(
@@ -58,29 +61,13 @@ export class UsersResolver {
     return await this.usersService.update(userUpdateInput, selection, authUser);
   }
 
-  @CheckPolicies((args) => ({
-    action: Action.Update,
-    subject: User.name,
-    fields: { password: args.password }
-  }))
-  @Mutation(() => User, { name: 'updateUserPassword', nullable: true })
-  async updatePassword(
-    @Args('id', { type: () => GraphQLUUID }) id: string,
-    @Args('password') password: string,
-    @Args('newPassword') newPassword: string,
-    @SelectionSet() selection: SelectionInput,
-    @AuthUser() authUser: User
-  ) {
-    return await this.usersService.updatePassword(id, password, newPassword, selection, authUser);
-  }
-
-  @Throttle({
-    default: {
-      limit: 1,
-      ttl: minutes(2),
-      exceptionMessage: (info) => 'Need to wait ' + info.timeToExpire + ' seconds to send email again.'
-    }
-  })
+  //   @Throttle({
+  //     default: {
+  //       limit: 1,
+  //       ttl: minutes(2),
+  //       exceptionMessage: (info) => 'Need to wait ' + info.timeToExpire + ' seconds to send email again.'
+  //     }
+  //   })
   @CheckPolicies(() => ({
     action: Action.Update,
     subject: User.name
@@ -98,20 +85,36 @@ export class UsersResolver {
     action: Action.Update,
     subject: User.name
   }))
-  @Mutation(() => User, { name: 'verifyUser', nullable: true })
-  async verify(
+  @Mutation(() => User, { name: 'updateUserPassword', nullable: true })
+  async updatePassword(
     @Args('id', { type: () => GraphQLUUID }) id: string,
-    @Args('code') code: string,
+    @Args('password') password: string,
+    @Args('newPassword') newPassword: string,
     @SelectionSet() selection: SelectionInput,
     @AuthUser() authUser: User
   ) {
-    return await this.usersService.verify(id, code, selection, authUser);
+    return await this.usersService.updatePassword(id, password, newPassword, selection, authUser);
   }
 
-  @CheckPolicies((args) => ({
+  @CheckPolicies(() => ({
+    action: Action.Update,
+    subject: User.name
+  }))
+  @Mutation(() => User, { name: 'updateUserPrimaryEmail', nullable: true })
+  async updatePrimaryEmail(
+    @Args('id', { type: () => GraphQLUUID }) id: string,
+    @Args('password') password: string,
+    @Args('code') code: string,
+    @Args('email', { type: () => EmailRefInput }) email: EmailRefInput,
+    @SelectionSet() selection: SelectionInput,
+    @AuthUser() authUser: User
+  ) {
+    return await this.usersService.updatePrimaryEmail(id, password, code, email, selection, authUser);
+  }
+
+  @CheckPolicies(() => ({
     action: Action.Delete,
-    subject: User.name,
-    fields: { id: args.id }
+    subject: User.name
   }))
   @Mutation(() => GraphQLUUID, { name: 'deleteUser' })
   async delete(
@@ -122,25 +125,54 @@ export class UsersResolver {
     return await this.usersService.delete(id, password, authUser);
   }
 
-  @Throttle({
-    default: {
-      limit: 1,
-      ttl: seconds(10),
-      exceptionMessage: (info) => 'Need to wait ' + info.timeToExpire + ' seconds to check password again.'
-    }
-  })
-  @CheckPolicies((args) => ({
+  //   @Throttle({
+  //     default: {
+  //       limit: 1,
+  //       ttl: seconds(10),
+  //       exceptionMessage: (info) => 'Need to wait ' + info.timeToExpire + ' seconds to check verification code again.'
+  //     }
+  //   })
+  @CheckPolicies(() => ({
     action: Action.Read,
-    subject: User.name,
-    fields: { id: args.id }
+    subject: User.name
   }))
-  @Query(() => Boolean, { name: 'checkPasswordUser', nullable: true })
+  @Query(() => Boolean, { name: 'checkUserVerificationCode', nullable: true })
+  async checkVerificationCode(
+    @Args('id', { type: () => GraphQLUUID }) id: string,
+    @Args('code') code: string,
+    @AuthUser() authUser: User
+  ) {
+    return await this.usersService.checkVerificationCode(id, code, authUser);
+  }
+
+  //   @Throttle({
+  //     default: {
+  //       limit: 1,
+  //       ttl: seconds(10),
+  //       exceptionMessage: (info) => 'Need to wait ' + info.timeToExpire + ' seconds to check password again.'
+  //     }
+  //   })
+  @CheckPolicies(() => ({
+    action: Action.Read,
+    subject: User.name
+  }))
+  @Query(() => Boolean, { name: 'checkUserPassword', nullable: true })
   async checkPassword(
     @Args('id', { type: () => GraphQLUUID }) id: string,
     @Args('password') password: string,
     @AuthUser() authUser: User
   ) {
     return await this.usersService.checkPassword(id, password, authUser);
+  }
+
+  @Public()
+  @CheckPolicies(() => ({
+    action: Action.Read,
+    subject: User.name
+  }))
+  @Query(() => Boolean, { name: 'checkUserUsernameExists', nullable: true })
+  async checkUsernameExists(@Args('username') username: string) {
+    return await this.usersService.checkUsernameExists(username);
   }
 
   @Public()

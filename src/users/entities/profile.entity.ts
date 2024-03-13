@@ -3,8 +3,9 @@ import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { FilterField, FilterOrderType, FilterWhereType } from '@nestjs!/graphql-filter';
 
 import { IsUrl } from 'class-validator';
-import { GraphQLURL } from 'graphql-scalars';
-import { Column } from 'typeorm';
+import { Column, ManyToOne } from 'typeorm';
+
+import { Email } from 'src/emails/entities/email.entity';
 
 @ObjectType()
 @InputType('ProfileInput')
@@ -34,6 +35,11 @@ export class Profile {
   @IsUrl()
   @Column({ nullable: true })
   url: string;
+
+  @Field(() => Email, { nullable: true })
+  @FilterField()
+  @ManyToOne(() => Email)
+  publicEmail: Email;
 }
 
 @FilterWhereType(Profile)

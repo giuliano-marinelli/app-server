@@ -28,10 +28,10 @@ export class AuthService {
 
   async login(usernameOrEmail: string, password: string, context: any) {
     const user = await this.usersRepository.findOne({
-      where: [{ email: usernameOrEmail }, { username: usernameOrEmail }]
+      where: [{ emails: { address: usernameOrEmail, verified: true } }, { username: usernameOrEmail }]
     });
     if (!user) {
-      throw new UnauthorizedException('Email or username are not registered.');
+      throw new UnauthorizedException('There is no username or verified email that match.');
     }
 
     //compare provided password with stored encrypted one

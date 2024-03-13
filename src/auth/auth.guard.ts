@@ -75,7 +75,7 @@ export class AuthGuard implements CanActivate {
 
     // find user with token user id
     const user = await this.usersRepository.findOne({
-      relations: { sessions: true },
+      relations: { profile: true, emails: true },
       where: { id: decodedToken.id }
     });
     if (!user) throw new GraphQLError(this.errorMessage + 'user not found', this.errorOptions);

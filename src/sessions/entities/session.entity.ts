@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Extensions, Field, InputType, ObjectType } from '@nestjs/graphql';
 
 import { FilterField, FilterOrderType, FilterWhereType, Many } from '@nestjs!/graphql-filter';
 

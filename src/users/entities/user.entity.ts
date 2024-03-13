@@ -1,4 +1,5 @@
 import {
+  Extensions,
   Field,
   InputType,
   IntersectionType,
@@ -13,18 +14,21 @@ import { FilterField, FilterOrderType, FilterWhereType, Many } from '@nestjs!/gr
 
 import { IsEmail, MaxLength, MinLength } from 'class-validator';
 import { GraphQLEmailAddress, GraphQLUUID } from 'graphql-scalars';
+import { CheckPolicy } from 'src/casl/casl.middleware';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
-  Unique,
   UpdateDateColumn
 } from 'typeorm';
 
 import { Profile, ProfileOrderInput, ProfileWhereInput } from './profile.entity';
+import { Email, EmailOrderInput, EmailWhereInput } from 'src/emails/entities/email.entity';
 import { Session, SessionOrderInput, SessionWhereInput } from 'src/sessions/entities/session.entity';
 
 export enum Role {
@@ -57,20 +61,11 @@ export class User {
   @Field()
   @FilterField()
   @Column()
-  // @Unique(['username'])
   @MinLength(4)
   @MaxLength(30)
   username: string;
 
-  @Field(() => GraphQLEmailAddress)
-  @FilterField()
-  @Column() // lowercase: true, trim: true
-  // @Unique(['email'])
-  @IsEmail()
-  @MaxLength(100)
-  email: string;
-
-  @Field()
+  @Field({ middleware: [CheckPolicy] })
   @Column()
   @MinLength(8)
   @MaxLength(100)
@@ -81,32 +76,34 @@ export class User {
   @Column({ type: 'enum', enum: Role, default: Role.USER })
   role: Role;
 
+  @Field(() => Email, { nullable: true, middleware: [CheckPolicy] })
+  @FilterField(() => EmailWhereInput, () => EmailOrderInput)
+  @OneToOne(() => Email, (email) => email.user, { cascade: true })
+  @JoinColumn({ referencedColumnName: 'id' })
+  @Extensions({ owner: 'id' })
+  primaryEmail: Email;
+
   @Field(() => Profile, { nullable: true })
   @FilterField(() => ProfileWhereInput, () => ProfileOrderInput)
   @Column(() => Profile)
   profile: Profile;
 
-  @Field({ nullable: true })
-  @FilterField()
-  @Column({ default: false })
-  verified: boolean;
-
-  @Field({ nullable: true })
+  @Field({ nullable: true, middleware: [CheckPolicy] })
   @FilterField()
   @Column({ nullable: true })
   verificationCode: string;
 
-  @Field({ nullable: true })
+  @Field({ nullable: true, middleware: [CheckPolicy] })
   @FilterField()
   @Column({ nullable: true })
   lastVerificationTry: Date;
 
-  @Field()
+  @Field({ nullable: true })
   @FilterField()
   @CreateDateColumn()
   createdAt: Date;
 
-  @Field()
+  @Field({ nullable: true })
   @FilterField()
   @UpdateDateColumn()
   updatedAt: Date;
@@ -116,24 +113,35 @@ export class User {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @Field(() => [Session], { nullable: true })
+  @Field(() => [Email], { nullable: true, middleware: [CheckPolicy] })
+  @FilterField(() => EmailWhereInput, () => EmailOrderInput)
+  @OneToMany(() => Email, (email) => email.user, { cascade: true })
+  @Extensions({ owner: 'id' })
+  emails: Email[];
+
+  @Field(() => [Session], { nullable: true, middleware: [CheckPolicy] })
   @FilterField(() => SessionWhereInput, () => SessionOrderInput)
   @OneToMany(() => Session, (session) => session.user, { cascade: true })
+  @Extensions({ owner: 'id' })
   sessions: Session[];
 }
 
 @InputType()
-export class UserCreateInput extends OmitType(
-  User,
-  ['id', 'createdAt', 'updatedAt', 'deletedAt', 'sessions'],
-  InputType
-) {}
+export class UserCreateInput extends PickType(User, ['username', 'password', 'role', 'profile'], InputType) {
+  @Field(() => GraphQLEmailAddress)
+  @IsEmail()
+  @MaxLength(100)
+  email: string;
+}
 
 @InputType()
 export class UserUpdateInput extends IntersectionType(
-  PartialType(OmitType(UserCreateInput, ['password'])),
-  PickType(User, ['id'], InputType)
+  PickType(User, ['id'], InputType),
+  PartialType(OmitType(UserCreateInput, ['password', 'email']))
 ) {}
+
+@InputType()
+export class UserRefInput extends PickType(User, ['id'], InputType) {}
 
 @FilterWhereType(User)
 export class UserWhereInput {}

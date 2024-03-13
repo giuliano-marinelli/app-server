@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { AbilityBuilder, createAliasResolver, createMongoAbility } from '@casl/ability';
 
+import { Email } from 'src/emails/entities/email.entity';
 import { Session } from 'src/sessions/entities/session.entity';
 import { Role, User } from 'src/users/entities/user.entity';
 
@@ -29,34 +30,34 @@ export class CaslFactory {
     // PUBLIC
 
     // Users
-    allow(Action.Read, User.name);
-    forbid(Action.Read, User.name, ['password', 'verificationCode', 'lastVerificationTry', 'sessions.token']);
-    allow(Action.Filter, User.name, ['username', 'email']);
     allow(Action.Create, User.name, ['username', 'email', 'password']);
+    allow(Action.Read, User.name);
+    forbid(Action.Read, User.name, ['password', 'verificationCode', 'lastVerificationTry']);
+    allow(Action.Filter, User.name, ['username', 'emails.address']);
+
+    // Emails
+    allow(Action.Read, Email.name);
+    forbid(Action.Read, Email.name, ['user.**', 'verificationCode', 'lastVerificationTry']);
+    allow(Action.Filter, Email.name, ['address', 'verified']);
 
     // USER
     if (user?.role == Role.USER) {
       // Users
-      // limited to logged user on service
-      allow(Action.Update, User.name);
-      forbid(Action.Update, User.name, [
-        'role',
-        'verified',
-        'verificationCode',
-        'lastVerificationTry',
-        'createdAt',
-        'updatedAt',
-        'deletedAt',
-        'sessions'
-      ]);
-      allow(Action.Delete, User.name, ['id']);
+      // limited to owner user on service
+      allow(Action.Update, User.name, ['id', 'username', 'profile.**']);
+      allow(Action.Delete, User.name);
+
+      // Emails
+      // limited to owner user on service
+      allow(Action.Create, Email.name, ['address', 'user.id']);
+      allow(Action.Update, Email.name);
+      allow(Action.Delete, Email.name);
 
       // Sessions
-      // limited to logged user on service
+      // limited to owner user on service
+      allow(Action.Update, Session.name);
       allow(Action.Read, Session.name);
-      // forbid(Action.Read, Session.name, ['token']);
       allow(Action.Filter, Session.name, ['id', 'user.id']);
-      allow(Action.Update, Session.name, ['id']);
     }
 
     // ADMIN
