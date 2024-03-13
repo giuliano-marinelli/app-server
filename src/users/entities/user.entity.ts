@@ -98,6 +98,11 @@ export class User {
   @Column({ nullable: true })
   lastVerificationTry: Date;
 
+  @Field({ nullable: true, middleware: [CheckPolicy] })
+  @FilterField()
+  @Column({ nullable: true })
+  passwordCode: string;
+
   @Field({ nullable: true })
   @FilterField()
   @CreateDateColumn()

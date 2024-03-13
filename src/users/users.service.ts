@@ -122,40 +122,6 @@ export class UsersService {
     });
   }
 
-  async updateVerificationCode(id: string, selection: SelectionInput, authUser: User) {
-    // only admin can update other users
-    if (id != authUser.id && authUser.role != Role.ADMIN)
-      throw new ForbiddenException('Cannot update password of users other than yourself.');
-
-    // check if user exists
-    const existent = await this.usersRepository.findOne({
-      where: { id: id }
-    });
-    if (!existent) throw new ConflictException('User not found.');
-
-    // check if last verification try was less than 2 minutes ago
-    // if (existent.lastVerificationTry && new Date().getTime() - existent.lastVerificationTry.getTime() < minutes(2))
-    //   throw new ConflictException(
-    //     'Need to wait ' +
-    //       ((new Date().getTime() - existent.lastVerificationTry.getTime()) / 1000).toFixed() +
-    //       ' seconds to send email again.'
-    //   );
-
-    // generate a 6 characters long alphanumeric code if it does not exist
-    const code = existent.verificationCode
-      ? existent.verificationCode
-      : Math.random().toString(36).substring(2, 8).toUpperCase();
-
-    await this.usersRepository.update({ id: id }, { verificationCode: code, lastVerificationTry: new Date() });
-
-    // TODO: send email with verification code to primary email
-
-    return await this.usersRepository.findOne({
-      relations: selection?.getRelations(),
-      where: { id: id }
-    });
-  }
-
   async updatePassword(id: string, password: string, newPassword: string, selection: SelectionInput, authUser: User) {
     // only admin can update other users
     if (id != authUser.id && authUser.role != Role.ADMIN)
@@ -255,20 +221,6 @@ export class UsersService {
     });
 
     return id;
-  }
-
-  async checkVerificationCode(id: string, code: string, authUser: User) {
-    // only admin can check verification code of other users
-    if (id != authUser.id && authUser.role != Role.ADMIN)
-      throw new ForbiddenException('Cannot check verification code of users other than yourself.');
-
-    // check if user exists
-    const existent = await this.usersRepository.findOne({
-      where: { id: id }
-    });
-    if (!existent) throw new ConflictException('User not found.');
-
-    return existent.verificationCode == code;
   }
 
   async checkPassword(id: string, password: string, authUser: User) {

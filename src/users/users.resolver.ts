@@ -61,26 +61,6 @@ export class UsersResolver {
     return await this.usersService.update(userUpdateInput, selection, authUser);
   }
 
-  //   @Throttle({
-  //     default: {
-  //       limit: 1,
-  //       ttl: minutes(2),
-  //       exceptionMessage: (info) => 'Need to wait ' + info.timeToExpire + ' seconds to send email again.'
-  //     }
-  //   })
-  @CheckPolicies(() => ({
-    action: Action.Update,
-    subject: User.name
-  }))
-  @Mutation(() => User, { name: 'updateUserVerificationCode', nullable: true })
-  async updateVerificationCode(
-    @Args('id', { type: () => GraphQLUUID }) id: string,
-    @SelectionSet() selection: SelectionInput,
-    @AuthUser() authUser: User
-  ) {
-    return await this.usersService.updateVerificationCode(id, selection, authUser);
-  }
-
   @CheckPolicies(() => ({
     action: Action.Update,
     subject: User.name
@@ -123,26 +103,6 @@ export class UsersResolver {
     @AuthUser() authUser: User
   ) {
     return await this.usersService.delete(id, password, authUser);
-  }
-
-  //   @Throttle({
-  //     default: {
-  //       limit: 1,
-  //       ttl: seconds(10),
-  //       exceptionMessage: (info) => 'Need to wait ' + info.timeToExpire + ' seconds to check verification code again.'
-  //     }
-  //   })
-  @CheckPolicies(() => ({
-    action: Action.Read,
-    subject: User.name
-  }))
-  @Query(() => Boolean, { name: 'checkUserVerificationCode', nullable: true })
-  async checkVerificationCode(
-    @Args('id', { type: () => GraphQLUUID }) id: string,
-    @Args('code') code: string,
-    @AuthUser() authUser: User
-  ) {
-    return await this.usersService.checkVerificationCode(id, code, authUser);
   }
 
   //   @Throttle({

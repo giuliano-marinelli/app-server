@@ -182,9 +182,11 @@ type Mutation {
   createUser(userCreateInput: UserCreateInput!): User
   deleteEmail(code: String!, id: UUID!, password: String!): UUID!
   deleteUser(id: UUID!, password: String!): UUID!
+  resetUserPassword(code: String!, newPassword: String!): User
   updateEmailVerificationCode(id: UUID!): Email
   updateUser(avatarFile: Upload, userUpdateInput: UserUpdateInput!): User
   updateUserPassword(id: UUID!, newPassword: String!, password: String!): User
+  updateUserPasswordCode(usernameOrEmail: String!): User
   updateUserPrimaryEmail(code: String!, email: EmailRefInput!, id: UUID!, password: String!): User
   updateUserVerificationCode(id: UUID!): User
   verifyEmail(code: String!, id: UUID!): Email
@@ -292,7 +294,7 @@ input SessionInput {
   createdAt: DateTime!
   device: DeviceInput
   id: UUID!
-  lastActivity: DateTime! = "2024-03-12T20:14:23.680Z"
+  lastActivity: DateTime! = "2024-03-13T04:21:55.188Z"
   token: String!
   updatedAt: DateTime!
   user: UserInput
@@ -375,6 +377,7 @@ type User {
   id: UUID!
   lastVerificationTry: DateTime
   password: String!
+  passwordCode: String
   primaryEmail: Email
   profile: Profile
   role: Role
@@ -399,6 +402,7 @@ input UserInput {
   id: UUID!
   lastVerificationTry: DateTime
   password: String!
+  passwordCode: String
   primaryEmail: EmailInput
   profile: ProfileInput
   role: Role
@@ -415,6 +419,7 @@ input UserOrderInput {
   emails: EmailOrderInput
   id: OrderDirection
   lastVerificationTry: OrderDirection
+  passwordCode: OrderDirection
   primaryEmail: EmailOrderInput
   profile: ProfileOrderInput
   role: OrderDirection
@@ -442,6 +447,7 @@ input UserWhereInput {
   emails: EmailWhereInput
   id: StringWhereInput
   lastVerificationTry: DateTimeWhereInput
+  passwordCode: StringWhereInput
   primaryEmail: EmailWhereInput
   profile: ProfileWhereInput
   role: StringWhereInput
