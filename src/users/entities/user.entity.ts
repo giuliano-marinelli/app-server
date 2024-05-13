@@ -120,7 +120,7 @@ export class User {
 
   @Field(() => [Email], { nullable: true, middleware: [CheckPolicy] })
   @FilterField(() => EmailWhereInput, () => EmailOrderInput)
-  @OneToMany(() => Email, (email) => email.user, { cascade: true })
+  @OneToMany(() => Email, (email) => email.user, { cascade: true, eager: true })
   @Extensions({ owner: 'id' })
   emails: Email[];
 

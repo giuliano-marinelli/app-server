@@ -234,7 +234,7 @@ input ProfileOrderInput {
   bio: OrderDirection
   location: OrderDirection
   name: OrderDirection
-  publicEmail: OrderDirection
+  publicEmail: EmailOrderInput
   url: OrderDirection
 }
 
@@ -244,7 +244,7 @@ input ProfileWhereInput {
   bio: StringWhereInput
   location: StringWhereInput
   name: StringWhereInput
-  publicEmail: StringWhereInput
+  publicEmail: EmailWhereInput
   url: StringWhereInput
 }
 
@@ -294,7 +294,7 @@ input SessionInput {
   createdAt: DateTime!
   device: DeviceInput
   id: UUID!
-  lastActivity: DateTime! = "2024-03-13T04:21:55.188Z"
+  lastActivity: DateTime! = "2024-05-02T23:10:16.313Z"
   token: String!
   updatedAt: DateTime!
   user: UserInput

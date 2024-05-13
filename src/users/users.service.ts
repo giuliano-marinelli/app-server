@@ -86,6 +86,7 @@ export class UsersService {
 
     // check if user exists
     const existent = await this.usersRepository.findOne({
+      relations: { primaryEmail: true },
       where: { id: userUpdateInput.id }
     });
     if (!existent) throw new ConflictException('User not found.');
@@ -107,7 +108,9 @@ export class UsersService {
           verified: true
         }
       });
-      if (!existentEmail) throw new ConflictException('Public email not found or not verified.');
+      // if email is not verified, check if it is your primary email (to allow updating profile when email is not verified)
+      if (!existentEmail && existent.primaryEmail?.id != userUpdateInput.profile.publicEmail.id)
+        throw new ConflictException('Public email not found or not verified.');
     }
 
     // if username is being updated, notify
@@ -264,8 +267,6 @@ export class UsersService {
       skip: pagination ? (pagination.page - 1) * pagination.count : null,
       take: pagination ? pagination.count : null
     });
-
-    console.log('FindUsers', set);
     return { set, count };
   }
 }

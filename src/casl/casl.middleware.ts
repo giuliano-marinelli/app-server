@@ -32,7 +32,7 @@ export const CheckPolicy: FieldMiddleware = async (midContext: MiddlewareContext
     path.forEach((p) => {
       sourceOwner = sourceOwner[p];
     });
-    if (sourceOwner != user?.id) {
+    if (sourceOwner != user?.id && user?.role != 'admin') {
       return null; // we can directly filter the not owned fields
       //   throw new ForbiddenException(
       //     `Forbidden request, you don't have permissions to read the ${field} of the ${subject} that's not of your own.`

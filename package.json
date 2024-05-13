@@ -32,7 +32,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/serve-static": "^4.0.0",
     "@nestjs/throttler": "^5.1.2",
-    "@nestjs/typeorm": "^10.0.1",
+    "@nestjs/typeorm": "^10.0.2",
     "apollo-server-express": "^3.13.0",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
@@ -47,7 +47,7 @@
     "poly-crypto": "^2.0.6",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.20",
+    "typeorm": "^0.4.0-alpha.1",
     "uuid": "^9.0.1",
     "uuid-validate": "^0.0.3"
   },
