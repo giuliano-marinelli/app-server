@@ -294,7 +294,7 @@ input SessionInput {
   createdAt: DateTime!
   device: DeviceInput
   id: UUID!
-  lastActivity: DateTime! = "2024-05-02T23:10:16.313Z"
+  lastActivity: DateTime! = "2025-08-08T18:29:49.400Z"
   token: String!
   updatedAt: DateTime!
   user: UserInput
