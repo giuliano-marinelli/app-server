@@ -71,10 +71,10 @@ export class User {
   @MaxLength(100)
   password: string;
 
-  @Field(() => Role, { nullable: true })
+  @Field({ nullable: true, defaultValue: Role.USER })
   @FilterField()
   @Column({ type: 'enum', enum: Role, default: Role.USER })
-  role: Role;
+  role: string;
 
   @Field(() => Email, { nullable: true, middleware: [CheckPolicy] })
   @FilterField(() => EmailWhereInput, () => EmailOrderInput)
@@ -132,7 +132,7 @@ export class User {
 }
 
 @InputType()
-export class UserCreateInput extends PickType(User, ['username', 'password', 'role', 'profile'], InputType) {
+export class UserCreateInput extends PickType(User, ['username', 'password', 'profile'], InputType) {
   @Field(() => GraphQLEmailAddress)
   @IsEmail()
   @MaxLength(100)

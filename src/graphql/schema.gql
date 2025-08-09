@@ -267,15 +267,6 @@ type Query {
   users(order: [UserOrderInput!], pagination: PaginationInput, where: [UserWhereInput!]): Users!
 }
 
-"""Defines wich permissions user has."""
-enum Role {
-  """Admin role can access to all application features."""
-  ADMIN
-
-  """User role can access to application basic features."""
-  USER
-}
-
 type Session {
   blockedAt: DateTime
   closedAt: DateTime
@@ -294,7 +285,7 @@ input SessionInput {
   createdAt: DateTime!
   device: DeviceInput
   id: UUID!
-  lastActivity: DateTime! = "2025-08-08T18:29:49.400Z"
+  lastActivity: DateTime! = "2025-08-09T01:16:47.734Z"
   token: String!
   updatedAt: DateTime!
   user: UserInput
@@ -380,7 +371,7 @@ type User {
   passwordCode: String
   primaryEmail: Email
   profile: Profile
-  role: Role
+  role: String
   sessions: [Session!]
   updatedAt: DateTime
   username: String!
@@ -391,7 +382,6 @@ input UserCreateInput {
   email: EmailAddress!
   password: String!
   profile: ProfileInput
-  role: Role
   username: String!
 }
 
@@ -405,7 +395,7 @@ input UserInput {
   passwordCode: String
   primaryEmail: EmailInput
   profile: ProfileInput
-  role: Role
+  role: String = "user"
   sessions: [SessionInput!]
   updatedAt: DateTime
   username: String!
@@ -436,7 +426,6 @@ input UserRefInput {
 input UserUpdateInput {
   id: UUID!
   profile: ProfileInput
-  role: Role
   username: String
 }
 

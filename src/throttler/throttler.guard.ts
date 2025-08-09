@@ -1,13 +1,7 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import {
-  ThrottlerException,
-  ThrottlerGenerateKeyFunction,
-  ThrottlerGetTrackerFunction,
-  ThrottlerGuard,
-  ThrottlerOptions
-} from '@nestjs/throttler';
-import { ThrottlerLimitDetail } from '@nestjs/throttler/dist/throttler.guard.interface';
+import { ThrottlerException, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerLimitDetail, ThrottlerRequest } from '@nestjs/throttler/dist/throttler.guard.interface';
 
 import { THROTTLER_EXCEPTION_MESSAGES } from './decorators/throttler.decorator';
 
@@ -22,20 +16,14 @@ export class GraphQLThrottlerGuard extends ThrottlerGuard {
     return { req: req, res: res };
   }
 
-  protected async handleRequest(
-    context: ExecutionContext,
-    limit: number,
-    ttl: number,
-    throttler: ThrottlerOptions,
-    getTracker: ThrottlerGetTrackerFunction,
-    generateKey: ThrottlerGenerateKeyFunction
-  ): Promise<boolean> {
+  protected override async handleRequest(requestProps: ThrottlerRequest): Promise<boolean> {
+    const { context, limit, ttl, throttler, getTracker, generateKey } = requestProps;
     const { req } = this.getRequestResponse(context);
-    const tracker = await getTracker(req);
+    const tracker = await getTracker(req, context);
     const key = generateKey(context, tracker, throttler.name);
     this.keyToName.set(key, throttler.name);
 
-    return super.handleRequest(context, limit, ttl, throttler, getTracker, generateKey);
+    return super.handleRequest(requestProps);
   }
 
   protected async throwThrottlingException(
