@@ -58,13 +58,16 @@ export class UsersService {
           user: { id: userInsert.identifiers[0].id }
         });
 
-        // set email as primary and default public email
+        // set email as primary and default public email and set profile name
         if (emailInsert?.identifiers[0]?.id) {
           await usersRepository.update(
             { id: userInsert.identifiers[0].id },
             {
               primaryEmail: { id: emailInsert.identifiers[0].id },
-              profile: { publicEmail: { id: emailInsert.identifiers[0].id } }
+              profile: {
+                publicEmail: { id: emailInsert.identifiers[0].id },
+                name: userCreateInput.profile.name
+              }
             }
           );
         }
