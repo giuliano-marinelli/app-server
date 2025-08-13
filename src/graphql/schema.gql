@@ -254,7 +254,7 @@ type Query {
   checkUserUsernameExists(username: String!): Boolean
   checkUserVerificationCode(code: String!, id: UUID!): Boolean
   email(id: UUID!): Email
-  emails(order: [EmailOrderInput!], pagination: PaginationInput, where: [EmailWhereInput!]): Emails!
+  emails(order: [EmailOrderInput!]! = [{createdAt: ASC}], pagination: PaginationInput, where: [EmailWhereInput!]): Emails!
 
   """Login with username or email and password. Returns the token string."""
   login(password: String!, usernameOrEmail: String!): String!
@@ -262,9 +262,9 @@ type Query {
   """Logout the current user. Close current session of device."""
   logout: Boolean!
   session(id: UUID!): Session
-  sessions(order: [SessionOrderInput!], pagination: PaginationInput, where: [SessionWhereInput!]): Sessions!
+  sessions(order: [SessionOrderInput!]! = [{createdAt: ASC}], pagination: PaginationInput, where: [SessionWhereInput!]): Sessions!
   user(id: UUID!): User
-  users(order: [UserOrderInput!], pagination: PaginationInput, where: [UserWhereInput!]): Users!
+  users(order: [UserOrderInput!]! = [{createdAt: ASC}], pagination: PaginationInput, where: [UserWhereInput!]): Users!
 }
 
 type Session {
@@ -285,7 +285,7 @@ input SessionInput {
   createdAt: DateTime!
   device: DeviceInput
   id: UUID!
-  lastActivity: DateTime! = "2025-08-12T15:02:41.249Z"
+  lastActivity: DateTime! = "2025-08-13T21:11:30.490Z"
   token: String!
   updatedAt: DateTime!
   user: UserInput

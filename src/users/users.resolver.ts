@@ -155,7 +155,7 @@ export class UsersResolver {
   async findMany(
     @Args('where', { type: () => [UserWhereInput], nullable: true }, TypeORMWhereTransform<User>)
     where: FindOptionsWhere<User>,
-    @Args('order', { type: () => [UserOrderInput], nullable: true }, TypeORMOrderTransform<User>)
+    @Args('order', { type: () => [UserOrderInput], defaultValue: [{ createdAt: 'ASC' }] }, TypeORMOrderTransform<User>)
     order: FindOptionsOrder<User>,
     @Args('pagination', { nullable: true }) pagination: PaginationInput,
     @SelectionSet({ root: 'set' }) selection: SelectionInput

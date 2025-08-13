@@ -58,7 +58,11 @@ export class SessionsResolver {
   async findMany(
     @Args('where', { type: () => [SessionWhereInput], nullable: true }, TypeORMWhereTransform<Session>)
     where: FindOptionsWhere<Session>,
-    @Args('order', { type: () => [SessionOrderInput], nullable: true }, TypeORMOrderTransform<Session>)
+    @Args(
+      'order',
+      { type: () => [SessionOrderInput], defaultValue: [{ createdAt: 'ASC' }] },
+      TypeORMOrderTransform<Session>
+    )
     order: FindOptionsOrder<Session>,
     @Args('pagination', { nullable: true }) pagination: PaginationInput,
     @SelectionSet({ root: 'set' }) selection: SelectionInput,

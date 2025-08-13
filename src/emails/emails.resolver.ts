@@ -120,7 +120,11 @@ export class EmailsResolver {
   async findMany(
     @Args('where', { type: () => [EmailWhereInput], nullable: true }, TypeORMWhereTransform<Email>)
     where: FindOptionsWhere<Email>,
-    @Args('order', { type: () => [EmailOrderInput], nullable: true }, TypeORMOrderTransform<Email>)
+    @Args(
+      'order',
+      { type: () => [EmailOrderInput], defaultValue: [{ createdAt: 'ASC' }] },
+      TypeORMOrderTransform<Email>
+    )
     order: FindOptionsOrder<Email>,
     @Args('pagination', { nullable: true }) pagination: PaginationInput,
     @SelectionSet({ root: 'set' }) selection: SelectionInput,
