@@ -197,7 +197,7 @@ export class EmailsService {
       relations: selection?.getRelations(),
       where: Owner(where, 'user.id', authUser, [Role.ADMIN]),
       order: order,
-      skip: pagination ? (pagination.page - 1) * pagination.count : null,
+      skip: pagination ? pagination.page * pagination.count : null,
       take: pagination ? pagination.count : null
     });
     return { set, count };

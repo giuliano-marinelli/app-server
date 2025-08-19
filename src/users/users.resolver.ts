@@ -37,8 +37,6 @@ export class UsersResolver {
   }))
   @Mutation(() => User, { name: 'createUser', nullable: true })
   async create(@Args('userCreateInput') userCreateInput: UserCreateInput, @SelectionSet() selection: SelectionInput) {
-    console.log('userCreateInput', userCreateInput);
-
     return await this.usersService.create(userCreateInput, selection);
   }
 
