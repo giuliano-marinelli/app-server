@@ -5,8 +5,8 @@ import { Owner, PaginationInput, SelectionInput } from '@nestjs!/graphql-filter'
 
 import { FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 
-import { Session } from './entities/session.entity';
 import { Role, User } from 'src/users/entities/user.entity';
+import { Session } from './entities/session.entity';
 
 @Injectable()
 export class SessionsService {
@@ -46,7 +46,10 @@ export class SessionsService {
     selection: SelectionInput,
     authUser: User
   ) {
-    const [set, count] = await this.sessionsRepository.findAndCount({
+    const [
+      set,
+      count
+    ] = await this.sessionsRepository.findAndCount({
       relations: selection?.getRelations(),
       where: Owner(where, 'user.id', authUser, [Role.ADMIN]),
       order: order,

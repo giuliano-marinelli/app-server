@@ -2,22 +2,9 @@ module.exports = {
   printWidth: 120,
   singleQuote: true,
   trailingComma: 'none',
-  plugins: [require.resolve('@trivago/prettier-plugin-sort-imports')],
-  importOrder: [
-    '^@nestjs/(.*)$',
-    '^@(.*)$',
-    '<THIRD_PARTY_MODULES>',
-    '^./(?!.*schema$)(?!.*entity$)(?!.*dto$)(?!.*input$)(?!.*controller$)(?!.*resolver$)(?!.*service$)(?!.*module$).*$',
-    '.*.schema$',
-    '.*.entity$',
-    '.*.dto$',
-    '.*.input$',
-    '.*.controller$',
-    '.*.resolver$',
-    '.*.service$',
-    '.*.module$'
+  plugins: [
+    require.resolve('prettier-plugin-organize-imports'),
+    require.resolve('prettier-plugin-multiline-arrays')
   ],
-  importOrderSeparation: true,
-  importOrderSortSpecifiers: true,
-  importOrderParserPlugins: ['typescript', 'decorators-legacy']
+  multilineArraysWrapThreshold: 1
 };

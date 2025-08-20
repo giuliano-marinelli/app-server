@@ -6,7 +6,6 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { GraphQLError, GraphQLErrorOptions } from 'graphql';
-import * as _ from 'lodash';
 import { Repository } from 'typeorm';
 import * as validateUUID from 'uuid-validate';
 
@@ -17,7 +16,7 @@ import { User } from 'src/users/entities/user.entity';
 
 import { SharedService } from 'src/shared/shared.service';
 
-import DeviceDetector = require('device-detector-js');
+import * as DeviceDetector from 'device-detector-js';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -32,7 +31,7 @@ export class AuthGuard implements CanActivate {
     private sessionsRepository: Repository<Session>
   ) {}
 
-  private errorMessage: string = 'Failed authentication: ';
+  private errorMessage = 'Failed authentication: ';
   private errorOptions: GraphQLErrorOptions = { extensions: { code: 'UNAUTHORIZED' } };
 
   async canActivate(execContext: ExecutionContext): Promise<boolean> {

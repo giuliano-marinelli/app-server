@@ -1,5 +1,4 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { minutes } from '@nestjs/throttler';
 
 import {
   AuthUser,
@@ -14,11 +13,10 @@ import { GraphQLUUID } from 'graphql-scalars';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { Action } from 'src/casl/casl.factory';
 import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
-import { Throttle } from 'src/throttler/decorators/throttler.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
-import { Email, EmailCreateInput, EmailOrderInput, EmailWhereInput, Emails } from './entities/email.entity';
 import { User } from 'src/users/entities/user.entity';
+import { Email, EmailCreateInput, EmailOrderInput, EmailWhereInput, Emails } from './entities/email.entity';
 
 import { EmailsService } from './emails.service';
 

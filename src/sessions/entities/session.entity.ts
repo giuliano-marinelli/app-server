@@ -1,12 +1,12 @@
-import { Extensions, Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
 
 import { FilterField, FilterOrderType, FilterWhereType, Many } from '@nestjs!/graphql-filter';
 
 import { GraphQLUUID } from 'graphql-scalars';
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-import { Device, DeviceOrderInput, DeviceWhereInput } from './device.entity';
 import { User, UserOrderInput, UserWhereInput } from 'src/users/entities/user.entity';
+import { Device, DeviceOrderInput, DeviceWhereInput } from './device.entity';
 
 @ObjectType()
 @InputType('SessionInput', { isAbstract: true })

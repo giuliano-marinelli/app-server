@@ -16,7 +16,7 @@ import { SharedService } from 'src/shared/shared.service';
 
 @Injectable()
 export class AuthService {
-  private errorMessage: string = 'Failed authentication: ';
+  private errorMessage = 'Failed authentication: ';
   private errorOptions: GraphQLErrorOptions = { extensions: { code: 'UNAUTHORIZED' } };
 
   constructor(
@@ -31,7 +31,9 @@ export class AuthService {
   async login(usernameOrEmail: string, password: string, context: any) {
     // find user by username or verified email
     const user = await this.usersRepository.findOne({
-      where: [{ emails: { address: usernameOrEmail, verified: true } }, { username: usernameOrEmail }]
+      where: [
+        { emails: { address: usernameOrEmail, verified: true } },
+        { username: usernameOrEmail }]
     });
     if (!user) throw new UnauthorizedException('There is no username or verified email that match.');
 
@@ -131,7 +133,9 @@ export class AuthService {
   async updatePasswordCode(usernameOrEmail: string, selection: SelectionInput) {
     // find user by username or verified email
     const user = await this.usersRepository.findOne({
-      where: [{ emails: { address: usernameOrEmail, verified: true } }, { username: usernameOrEmail }]
+      where: [
+        { emails: { address: usernameOrEmail, verified: true } },
+        { username: usernameOrEmail }]
     });
     if (!user) throw new UnauthorizedException('There is no username or verified email that match.');
 

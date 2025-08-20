@@ -28,7 +28,15 @@ export const Throttle = (options: Record<string, ThrottlerMethodOrControllerOpti
     SetMetadata(
       THROTTLER_EXCEPTION_MESSAGES,
       Object.fromEntries(
-        Object.entries(options).map(([throttleName, throttleConfig]) => [throttleName, throttleConfig.exceptionMessage])
+        Object.entries(options).map(
+          ([
+            throttleName,
+            throttleConfig
+          ]) => [
+            throttleName,
+            throttleConfig.exceptionMessage
+          ]
+        )
       )
     ),
     NestJSThrottle(options)

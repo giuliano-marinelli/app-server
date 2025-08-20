@@ -28,7 +28,10 @@ import { UsersModule } from 'src/users/users.module';
     SessionsModule,
     SharedModule
   ],
-  providers: [AuthResolver, AuthService, { provide: APP_GUARD, useClass: AuthGuard }],
+  providers: [
+    AuthResolver,
+    AuthService,
+    { provide: APP_GUARD, useClass: AuthGuard }],
   exports: [AuthService]
 })
 export class AuthModule {}

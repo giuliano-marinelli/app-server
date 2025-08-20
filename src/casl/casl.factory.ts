@@ -23,33 +23,62 @@ export class CaslFactory {
 
     const resolveAction = createAliasResolver({
       filter: ['read'], // filter action includes read action but not vice versa
-      modify: ['update', 'delete']
+      modify: [
+        'update',
+        'delete'
+      ]
       // manage not includes filter
     });
 
     // PUBLIC
 
     // Users
-    allow(Action.Create, User.name, ['username', 'email', 'password', 'profile.name']);
+    allow(Action.Create, User.name, [
+      'username',
+      'email',
+      'password',
+      'profile.name'
+    ]);
     allow(Action.Read, User.name);
-    forbid(Action.Read, User.name, ['password', 'verificationCode', 'lastVerificationTry']);
-    allow(Action.Filter, User.name, ['username', 'emails.address']);
+    forbid(Action.Read, User.name, [
+      'password',
+      'verificationCode',
+      'lastVerificationTry'
+    ]);
+    allow(Action.Filter, User.name, [
+      'username',
+      'emails.address'
+    ]);
 
     // Emails
     allow(Action.Read, Email.name);
-    forbid(Action.Read, Email.name, ['user.**', 'verificationCode', 'lastVerificationTry']);
-    allow(Action.Filter, Email.name, ['address', 'verified']);
+    forbid(Action.Read, Email.name, [
+      'user.**',
+      'verificationCode',
+      'lastVerificationTry'
+    ]);
+    allow(Action.Filter, Email.name, [
+      'address',
+      'verified'
+    ]);
 
     // USER
     if (user?.role == Role.USER) {
       // Users
       // limited to owner user on service
-      allow(Action.Update, User.name, ['id', 'username', 'profile.**']);
+      allow(Action.Update, User.name, [
+        'id',
+        'username',
+        'profile.**'
+      ]);
       allow(Action.Delete, User.name);
 
       // Emails
       // limited to owner user on service
-      allow(Action.Create, Email.name, ['address', 'user.id']);
+      allow(Action.Create, Email.name, [
+        'address',
+        'user.id'
+      ]);
       allow(Action.Update, Email.name);
       allow(Action.Delete, Email.name);
 
@@ -57,7 +86,10 @@ export class CaslFactory {
       // limited to owner user on service
       allow(Action.Update, Session.name);
       allow(Action.Read, Session.name);
-      allow(Action.Filter, Session.name, ['id', 'user.id']);
+      allow(Action.Filter, Session.name, [
+        'id',
+        'user.id'
+      ]);
     }
 
     // ADMIN

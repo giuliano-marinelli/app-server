@@ -14,8 +14,8 @@ import { Action } from 'src/casl/casl.factory';
 import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
-import { Session, SessionOrderInput, SessionWhereInput, Sessions } from './entities/session.entity';
 import { User } from 'src/users/entities/user.entity';
+import { Session, SessionOrderInput, SessionWhereInput, Sessions } from './entities/session.entity';
 
 import { SessionsService } from './sessions.service';
 

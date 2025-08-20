@@ -54,7 +54,6 @@
     "@nestjs/cli": "^11.x",
     "@nestjs/schematics": "^11.x",
     "@nestjs/testing": "^11.x",
-    "@trivago/prettier-plugin-sort-imports": "^5.x",
     "@types/express": "^5.x",
     "@types/jest": "^30.x",
     "@types/node": "^24.x",
@@ -66,13 +65,17 @@
     "eslint-plugin-prettier": "^5.x",
     "jest": "^30.x",
     "prettier": "^3.x",
+    "prettier-eslint": "^16.4.2",
+    "prettier-plugin-multiline-arrays": "^4.x",
+    "prettier-plugin-organize-imports": "^4.x",
     "source-map-support": "^0.x",
     "supertest": "^7.x",
     "ts-jest": "^29.x",
     "ts-loader": "^9.x",
     "ts-node": "^10.x",
     "tsconfig-paths": "^4.x",
-    "typescript": "^5.x"
+    "typescript": "^5.x",
+    "typescript-eslint": "^8.x"
   },
   "jest": {
     "moduleFileExtensions": [

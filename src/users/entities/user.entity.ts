@@ -27,9 +27,9 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 
-import { Profile, ProfileOrderInput, ProfileWhereInput } from './profile.entity';
 import { Email, EmailOrderInput, EmailWhereInput } from 'src/emails/entities/email.entity';
 import { Session, SessionOrderInput, SessionWhereInput } from 'src/sessions/entities/session.entity';
+import { Profile, ProfileOrderInput, ProfileWhereInput } from './profile.entity';
 
 export enum Role {
   USER = 'user',
@@ -132,7 +132,15 @@ export class User {
 }
 
 @InputType()
-export class UserCreateInput extends PickType(User, ['username', 'password', 'profile'], InputType) {
+export class UserCreateInput extends PickType(
+  User,
+  [
+    'username',
+    'password',
+    'profile'
+  ],
+  InputType
+) {
   @Field(() => GraphQLEmailAddress)
   @IsEmail()
   @MaxLength(100)
@@ -142,7 +150,12 @@ export class UserCreateInput extends PickType(User, ['username', 'password', 'pr
 @InputType()
 export class UserUpdateInput extends IntersectionType(
   PickType(User, ['id'], InputType),
-  PartialType(OmitType(UserCreateInput, ['password', 'email']))
+  PartialType(
+    OmitType(UserCreateInput, [
+      'password',
+      'email'
+    ])
+  )
 ) {}
 
 @InputType()

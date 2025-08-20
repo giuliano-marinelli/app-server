@@ -8,7 +8,9 @@ import { SharedModule } from 'src/shared/shared.module';
 
 @Module({
   imports: [SharedModule],
-  providers: [CaslFactory, { provide: APP_GUARD, useClass: PoliciesGuard }],
+  providers: [
+    CaslFactory,
+    { provide: APP_GUARD, useClass: PoliciesGuard }],
   exports: [CaslFactory]
 })
 export class CaslModule {}

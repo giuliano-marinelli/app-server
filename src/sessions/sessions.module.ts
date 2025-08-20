@@ -9,8 +9,19 @@ import { SessionsResolver } from './sessions.resolver';
 import { SessionsService } from './sessions.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Session, Device])],
-  providers: [SessionsResolver, SessionsService],
-  exports: [SessionsService, TypeOrmModule]
+  imports: [
+    TypeOrmModule.forFeature([
+      Session,
+      Device
+    ])
+  ],
+  providers: [
+    SessionsResolver,
+    SessionsService
+  ],
+  exports: [
+    SessionsService,
+    TypeOrmModule
+  ]
 })
 export class SessionsModule {}

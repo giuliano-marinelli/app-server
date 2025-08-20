@@ -76,7 +76,14 @@ import { UsersModule } from './users/users.module';
         serveRoot: '/public',
         serveStaticOptions: {
           index: false,
-          extensions: ['jpeg', 'jpg', 'png', 'gif', 'svg', 'webp']
+          extensions: [
+            'jpeg',
+            'jpg',
+            'png',
+            'gif',
+            'svg',
+            'webp'
+          ]
         }
       },
       {

@@ -8,8 +8,8 @@ import * as bcrypt from 'bcryptjs';
 import { EntityManager, FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 
-import { Email, EmailCreateInput } from './entities/email.entity';
 import { Role, User } from 'src/users/entities/user.entity';
+import { Email, EmailCreateInput } from './entities/email.entity';
 
 @Injectable()
 export class EmailsService {
@@ -173,7 +173,10 @@ export class EmailsService {
   }
 
   async checkAddressExists(address: string) {
-    const [set, count] = await this.emailsRepository.findAndCount({
+    const [
+      set,
+      count
+    ] = await this.emailsRepository.findAndCount({
       where: { address: address, verified: true }
     });
     return count > 0;
@@ -193,7 +196,10 @@ export class EmailsService {
     selection: SelectionInput,
     authUser: User
   ) {
-    const [set, count] = await this.emailsRepository.findAndCount({
+    const [
+      set,
+      count
+    ] = await this.emailsRepository.findAndCount({
       relations: selection?.getRelations(),
       where: Owner(where, 'user.id', authUser, [Role.ADMIN]),
       order: order,
