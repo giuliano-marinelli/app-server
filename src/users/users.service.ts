@@ -139,9 +139,22 @@ export class UsersService {
     });
     if (!existent) throw new ConflictException('User not found.');
 
-    // check if old password is correct
-    const passwordMatch = await bcrypt.compare(password, existent.password);
-    if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+    // check the password: if user is not admin, check password of the user to be changed
+    // if user is admin, check password of the authenticated user
+    if (authUser.role != Role.ADMIN) {
+      // check if old password is correct
+      const passwordMatch = await bcrypt.compare(password, existent.password);
+      if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+    } else {
+      // check if admin user exists
+      const admin = await this.usersRepository.findOne({
+        where: { id: authUser.id }
+      });
+
+      // check if password is correct
+      const passwordMatch = await bcrypt.compare(password, admin.password);
+      if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+    }
 
     // hash new password
     const salt = await bcrypt.genSalt(10);
@@ -174,16 +187,32 @@ export class UsersService {
     });
     if (!existent) throw new ConflictException('User or verified email not found.');
 
-    // check if password is correct
-    const passwordMatch = await bcrypt.compare(password, existent.password);
-    if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+    // check the password: if user is not admin, check password of the user to be changed
+    // if user is admin, check password of the authenticated user
+    if (authUser.role != Role.ADMIN) {
+      // check if password is correct
+      const passwordMatch = await bcrypt.compare(password, existent.password);
+      if (!passwordMatch) throw new ConflictException('Password is incorrect.');
 
-    // check if code is correct
-    if (existent.verificationCode != code) throw new ConflictException('Invalid verification code.');
+      // check if verfication code is provided
+      if (!code) throw new ConflictException('Verification code is required.');
 
-    // check if verification code is expired
-    if (new Date().getTime() - existent.lastVerificationTry.getTime() > minutes(2))
-      throw new ConflictException('Verification code expired.');
+      // check if code is correct
+      if (existent.verificationCode != code) throw new ConflictException('Invalid verification code.');
+
+      // check if verification code is expired
+      if (new Date().getTime() - existent.lastVerificationTry.getTime() > minutes(2))
+        throw new ConflictException('Verification code expired.');
+    } else {
+      // check if admin user exists
+      const admin = await this.usersRepository.findOne({
+        where: { id: authUser.id }
+      });
+
+      // check if password is correct
+      const passwordMatch = await bcrypt.compare(password, admin.password);
+      if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+    }
 
     // TODO: send email advising primary email changed
 
@@ -209,9 +238,22 @@ export class UsersService {
     });
     if (!existent) throw new ConflictException('User not found.');
 
-    // check if password is correct
-    const passwordMatch = await bcrypt.compare(password, existent.password);
-    if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+    // check the password: if user is not admin, check password of the user to be deleted
+    // if user is admin, check password of the authenticated user
+    if (authUser.role != Role.ADMIN) {
+      // check if password is correct
+      const passwordMatch = await bcrypt.compare(password, existent.password);
+      if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+    } else {
+      // check if admin user exists
+      const admin = await this.usersRepository.findOne({
+        where: { id: authUser.id }
+      });
+
+      // check if password is correct
+      const passwordMatch = await bcrypt.compare(password, admin.password);
+      if (!passwordMatch) throw new ConflictException('Password is incorrect.');
+    }
 
     // delete user and close all sessions
     await this.entityManager.transaction(async (manager) => {
