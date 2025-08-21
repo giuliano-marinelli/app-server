@@ -5,6 +5,7 @@ import { GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 
+import * as DeviceDetector from 'device-detector-js';
 import { GraphQLError, GraphQLErrorOptions } from 'graphql';
 import { Repository } from 'typeorm';
 import * as validateUUID from 'uuid-validate';
@@ -15,8 +16,6 @@ import { Session } from 'src/sessions/entities/session.entity';
 import { User } from 'src/users/entities/user.entity';
 
 import { SharedService } from 'src/shared/shared.service';
-
-import * as DeviceDetector from 'device-detector-js';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

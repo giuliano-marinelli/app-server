@@ -5,8 +5,8 @@ import { Owner, PaginationInput, SelectionInput } from '@nestjs!/graphql-filter'
 
 import { FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 
-import { Role, User } from 'src/users/entities/user.entity';
 import { Session } from './entities/session.entity';
+import { Role, User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class SessionsService {

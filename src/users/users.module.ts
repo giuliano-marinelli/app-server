@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Email } from 'src/emails/entities/email.entity';
 import { Profile } from './entities/profile.entity';
 import { User } from './entities/user.entity';
+import { Email } from 'src/emails/entities/email.entity';
 
 import { UsersResolver } from './users.resolver';
 

@@ -17,9 +17,9 @@ import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { UploadTransform } from 'src/pipes/upload.pipe';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
-import { EmailRefInput } from 'src/emails/entities/email.entity';
 import { Profile } from './entities/profile.entity';
 import { User, UserCreateInput, UserOrderInput, UserUpdateInput, UserWhereInput, Users } from './entities/user.entity';
+import { EmailRefInput } from 'src/emails/entities/email.entity';
 
 import { UsersService } from './users.service';
 

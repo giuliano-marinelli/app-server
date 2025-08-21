@@ -7,9 +7,9 @@ import { PaginationInput, SelectionInput } from '@nestjs!/graphql-filter';
 import * as bcrypt from 'bcryptjs';
 import { EntityManager, Equal, FindOptionsOrder, FindOptionsWhere, Not, Repository } from 'typeorm';
 
+import { Role, User, UserCreateInput, UserUpdateInput } from './entities/user.entity';
 import { Email, EmailRefInput } from 'src/emails/entities/email.entity';
 import { Session } from 'src/sessions/entities/session.entity';
-import { Role, User, UserCreateInput, UserUpdateInput } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {

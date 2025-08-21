@@ -15,8 +15,8 @@ import { Action } from 'src/casl/casl.factory';
 import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
-import { User } from 'src/users/entities/user.entity';
 import { Email, EmailCreateInput, EmailOrderInput, EmailWhereInput, Emails } from './entities/email.entity';
+import { User } from 'src/users/entities/user.entity';
 
 import { EmailsService } from './emails.service';
 
