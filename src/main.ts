@@ -1,12 +1,18 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
+import * as fs from 'fs';
 import { graphqlUploadExpress } from 'graphql-upload-ts';
 
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const httpsOptions = {
+    key: fs.readFileSync('./src/ssl/key.pem'),
+    cert: fs.readFileSync('./src/ssl/cert.pem')
+  };
+
+  const app = await NestFactory.create(AppModule, { httpsOptions });
   app.useGlobalPipes(new ValidationPipe({ skipMissingProperties: true })); // enable class-validator exceptions
   app.use(graphqlUploadExpress({ overrideSendResponse: false, maxFileSize: 10485760, maxFiles: 10 })); // 10mb max file size and 10 files max
   app.enableCors();

@@ -49,3 +49,41 @@ Run `npm run test` or `npm run test:watch`: executes [jest](https://jestjs.io/) 
 Run `npm run test:cov`: executes [jest](https://jestjs.io/) to run the unit tests and generate a code coverage report.
 
 Run `npm run test:e2e`: executes [jest](https://jestjs.io/) to run the end-to-end tests.
+
+## Progressive Web App (PWA)
+
+Both client and server are configured to support PWA features, allowing for a more app-like experience on the web. This includes service workers for offline support, as well as manifest files for home screen installation.
+
+For allow PWA features, the application must be served over HTTPS, which is already configured in the server. Also, it is necessary to provide a valid SSL certificate.
+
+For development, self-signed certificates can be used. Use [mkcert](https://github.com/FiloSottile/mkcert) to create and install a local CA (Certificate Authority) and generate locally trusted certificates.
+
+Firstly, install mkcert by following the instructions in the [mkcert repository](https://github.com/FiloSottile/mkcert#installation).
+
+Then, run the following commands to create and install the local CA:
+
+```bash
+mkcert -install
+```
+
+After the CA is installed, you can generate a certificate and key for your local server:
+
+```bash
+cd ./src/ssl # navigate to the ssl folder
+mkcert -key-file key.pem -cert-file cert.pem localhost 127.0.0.1 ::1 192.168.1.40
+# replace the IP address with your host IP in the LAN for access in other devices
+```
+
+This will create two files: `cert.pem` (the certificate) and `key.pem` (the private key). These files will be used by the server to establish secure HTTPS connections.
+
+If you want to access the PWA features from other devices in your local network, make sure to use the host IP address (e.g., `192.168.1.40`) in the `mkcert` command. **And more important**, you have to copy and set the `rootCA.pem` file into your device's trusted CA store.
+
+You can find the `rootCA.pem` file by using the next command after **mkcert** has been installed in your host:
+
+```bash
+mkcert -CAROOT
+```
+
+In **Android** you have to go to `Settings > Security & Privacy > Advanced (sometimes)  > Install certificate from storage` and add the copied `rootCA.pem`.
+
+See more about this at [mkcert documentation](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installing-the-ca-on-other-systems)
