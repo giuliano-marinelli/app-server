@@ -1,4 +1,4 @@
-erdiagram FootballShirts
+erdiagram App
 notation=uml
 
 entity User {
