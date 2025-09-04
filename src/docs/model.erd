@@ -1,0 +1,68 @@
+erdiagram FootballShirts
+notation=uml
+
+entity User {
+    id: string key
+    username: string
+    password: string
+    role: string
+    verificationCode: string
+    lastVerificationTry: Date
+    passwordCode: string
+}
+
+weak relationship profile {
+    User[1] -> Profile[1]
+}
+
+weak entity Profile {
+    id: string partial-key
+    avatar: string
+    name: string
+    bio: string
+    location: string
+    url: string
+}
+
+relationship primaryEmail {
+    User[1] -> Email[1]
+}
+
+relationship emails {
+    User[1] -> Email[N]
+}
+
+entity Email {
+    id: string key
+    address: string
+    verified: boolean
+    verificationCode: string
+    lastVerificationTry: Date
+}
+
+relationship sessions {
+    User[1] -> Session[N]
+}
+
+entity Session {
+    id: string key
+    token: string
+    lastActivity: Date
+    blockedAt: Date
+    closedAt: Date
+}
+
+weak relationship device {
+    Session[1] -> Device[1]
+}
+
+weak entity Device {
+    id: string partial-key
+    client: string
+    os: string
+    brand: string
+    model: string
+    type: string
+    bot: boolean
+    ip: string
+}
