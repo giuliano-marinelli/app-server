@@ -55,7 +55,7 @@ import { UsersModule } from './users/users.module';
     }),
     GraphQLModule.forRoot({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/graphql/schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       playground: false,
       uploads: false,

@@ -34,3 +34,9 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# graphql
+/src/schema.gql
+
+# npm
+package-lock.json
