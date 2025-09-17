@@ -1,0 +1,75 @@
+import { Field, InputType, IntersectionType, ObjectType, OmitType, PartialType, PickType } from '@nestjs/graphql';
+
+import { FilterField, FilterOrderType, FilterWhereType, Many } from '@nestjs!/graphql-filter';
+
+import { GraphQLUUID } from 'graphql-scalars';
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+
+{{#each embedEntities}}
+import { {{properCase this.name}}, {{properCase this.name}}OrderInput, {{properCase this.name}}WhereInput } from './{{dashCase this.name}}.entity';
+{{/each}}
+
+@ObjectType()
+@InputType('{{properCase
+  entity.name
+}}Input', { isAbstract: true })
+@Entity()
+export class {{properCase entity.name}} {
+  {{#each entity.fields}}
+  {{#if this.isKey}}
+  @Field(() => GraphQLUUID)
+  {{else}}
+  @Field()
+  {{/if}}
+  @FilterField()
+  {{#if this.isKey}}
+  @PrimaryGeneratedColumn('uuid')
+  {{else}}
+  @Column()
+  {{/if}}
+  {{this.name}}: {{this.type}};
+
+  {{/each}}
+  {{#each embedEntities}}
+  @Field(() => {{properCase this.name}}, { nullable: true })
+  @FilterField(() => {{properCase this.name}}WhereInput, () => {{properCase this.name}}OrderInput)
+  @Column(() => {{properCase this.name}})
+  {{camelCase this.name}}: {{properCase this.name}};
+
+  {{/each}}
+  @Field({ nullable: true })
+  @FilterField()
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @Field({ nullable: true })
+  @FilterField()
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  @Field({ nullable: true })
+  @FilterField()
+  @DeleteDateColumn()
+  deletedAt: Date;
+}
+
+@InputType()
+export class {{properCase entity.name}}CreateInput extends OmitType({{properCase entity.name}}, ['id'], InputType) {}
+
+@InputType()
+export class {{properCase entity.name}}UpdateInput extends IntersectionType(
+  PickType({{properCase entity.name}}, ['id'], InputType),
+  PartialType({{properCase entity.name}}CreateInput)
+) {}
+
+@InputType()
+export class {{properCase entity.name}}RefInput extends PickType({{properCase entity.name}}, ['id'], InputType) {}
+
+@FilterWhereType({{properCase entity.name}})
+export class {{properCase entity.name}}WhereInput {}
+
+@FilterOrderType({{properCase entity.name}})
+export class {{properCase entity.name}}OrderInput {}
+
+@Many({{properCase entity.name}}, { setName: 'set' })
+export class {{properCase entity.name}}s {}

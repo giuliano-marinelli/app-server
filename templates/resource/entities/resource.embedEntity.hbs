@@ -1,0 +1,27 @@
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+
+import { FilterField, FilterOrderType, FilterWhereType } from '@nestjs!/graphql-filter';
+
+import { Column } from 'typeorm';
+
+@ObjectType()
+@InputType('{{properCase embedEntity.name}}Input')
+export class {{properCase embedEntity.name}} {
+  {{#each embedEntity.fields}}
+  {{#unless this.isKey}}
+  @Field({ nullable: true })
+  @FilterField()
+  @Column({ nullable: true })
+  {{this.name}}: {{this.type}};
+  {{#unless @last}}
+  
+  {{/unless}}
+  {{/unless}}
+  {{/each}}
+}
+
+@FilterWhereType({{properCase embedEntity.name}})
+export class {{properCase embedEntity.name}}WhereInput {}
+
+@FilterOrderType({{properCase embedEntity.name}})
+export class {{properCase embedEntity.name}}OrderInput {}

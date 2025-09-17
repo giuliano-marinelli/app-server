@@ -1,0 +1,34 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { {{properCase entity.name}} } from './entities/{{dashCase entity.name}}.entity';
+{{#if embedEntities}}
+{{#each embedEntities}}
+import { {{properCase this.name}} } from './entities/{{dashCase this.name}}.entity';
+{{/each}}
+{{/if}}
+
+import { {{properCase entity.name}}sResolver } from './{{dashCase entity.name}}s.resolver';
+
+import { {{properCase entity.name}}sService } from './{{dashCase entity.name}}s.service';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([
+      {{properCase entity.name}}{{#if embedEntities}}, 
+      {{#each embedEntities}}
+      {{properCase this.name}}{{#unless @last}},{{/unless}}
+      {{/each}}
+      {{/if}}
+    ])
+  ],
+  providers: [
+    {{properCase entity.name}}sResolver,
+    {{properCase entity.name}}sService
+  ],
+  exports: [
+    {{properCase entity.name}}sService,
+    TypeOrmModule
+  ]
+})
+export class {{properCase entity.name}}sModule {}

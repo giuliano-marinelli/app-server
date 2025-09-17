@@ -92,6 +92,7 @@ import { UsersModule } from './users/users.module';
     ),
     AuthModule,
     CaslModule,
+    // resources modules
     UsersModule,
     SessionsModule,
     EmailsModule,

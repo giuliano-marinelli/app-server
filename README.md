@@ -87,3 +87,25 @@ mkcert -CAROOT
 In **Android** you have to go to `Settings > Security & Privacy > Advanced (sometimes)  > Install certificate from storage` and add the copied `rootCA.pem`.
 
 See more about this at [mkcert documentation](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installing-the-ca-on-other-systems)
+
+## Scaffolding
+
+On this project are included resource scaffolding templates, that can be used for create new resources (module, service, resolver, entities) using [Plop](https://plopjs.com/) as generator.
+
+It will use the entities defined in a .erd file like the included at **docs/model.erd**.
+
+ER Model can be edited using [BigER Modeling Tool Extension](https://marketplace.visualstudio.com/items?itemName=BIGModelingTools.erdiagram) for [VSCode](https://code.visualstudio.com/).
+
+To create a new resource, first install plop globally if you haven't already:
+
+```bash
+npm install -g plop
+```
+
+Then, run the following command in the project root folder:
+
+```bash
+plop resource
+```
+
+This will prompt you to enter the **.erd file location** _(by default docs/model.erd)_. The **name of the entity** you want to create (it should match one of the entities defined in your .erd file, e.g.: _User_). Any **embedded entities** that you want to include into the main entity (e.g.: _Profile_ in _User_). And if you want to **import the resource** in the main app module.

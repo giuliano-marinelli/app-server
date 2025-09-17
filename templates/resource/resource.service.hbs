@@ -1,0 +1,82 @@
+import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+
+import { PaginationInput, SelectionInput } from '@nestjs!/graphql-filter';
+
+import { FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
+
+import { {{properCase entity.name}}, {{properCase entity.name}}CreateInput, {{properCase entity.name}}UpdateInput } from './entities/{{dashCase entity.name}}.entity';
+import { Role, User } from 'src/users/entities/user.entity';
+
+@Injectable()
+export class {{properCase entity.name}}sService {
+  constructor(
+    @InjectRepository({{properCase entity.name}})
+    private {{camelCase entity.name}}sRepository: Repository<{{properCase entity.name}}>
+  ) {}
+
+  async create({{camelCase entity.name}}CreateInput: {{properCase entity.name}}CreateInput, selection: SelectionInput, authUser: User) {
+    // insert {{camelCase entity.name}}
+    const insert = await this.{{camelCase entity.name}}sRepository.insert({
+      ...{{camelCase entity.name}}CreateInput
+    });
+
+    return await this.{{camelCase entity.name}}sRepository.findOne({
+      relations: selection?.getRelations(),
+      where: { id: insert.identifiers[0].id }
+    });
+  }
+
+  async update({{camelCase entity.name}}UpdateInput: {{properCase entity.name}}UpdateInput, selection: SelectionInput, authUser: User) {
+    // check if {{camelCase entity.name}} exists
+    const existent = await this.{{camelCase entity.name}}sRepository.findOne({
+      where: { id: {{camelCase entity.name}}UpdateInput.id }
+    });
+    if (!existent) throw new ConflictException('{{sentenceCase entity.name}} not found.');
+
+    await this.{{camelCase entity.name}}sRepository.update({ id: {{camelCase entity.name}}UpdateInput.id }, {{camelCase entity.name}}UpdateInput);
+    return await this.{{camelCase entity.name}}sRepository.findOne({
+      relations: selection?.getRelations(),
+      where: { id: {{camelCase entity.name}}UpdateInput.id }
+    });
+  }
+
+  async delete(id: string, authUser: User) {
+    // check if {{camelCase entity.name}} exists
+    const existent = await this.{{camelCase entity.name}}sRepository.findOne({
+      where: { id: id }
+    });
+    if (!existent) throw new ConflictException('{{sentenceCase entity.name}} not found.');
+
+    // delete {{camelCase entity.name}}
+    this.{{camelCase entity.name}}sRepository.softDelete({ id: id });
+
+    return id;
+  }
+
+  async findOne(id: string, selection: SelectionInput) {
+    return await this.{{camelCase entity.name}}sRepository.findOne({
+      relations: selection?.getRelations(),
+      where: { id: id }
+    });
+  }
+
+  async findMany(
+    where: FindOptionsWhere<{{properCase entity.name}}>,
+    order: FindOptionsOrder<{{properCase entity.name}}>,
+    pagination: PaginationInput,
+    selection: SelectionInput
+  ) {
+    const [
+      set,
+      count
+    ] = await this.{{camelCase entity.name}}sRepository.findAndCount({
+      relations: selection?.getRelations(),
+      where: where,
+      order: order,
+      skip: pagination ? pagination.page * pagination.count : null,
+      take: pagination ? pagination.count : null
+    });
+    return { set, count };
+  }
+}

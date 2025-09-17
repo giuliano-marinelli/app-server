@@ -1,0 +1,98 @@
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+
+import {
+  AuthUser,
+  PaginationInput,
+  SelectionInput,
+  SelectionSet,
+  TypeORMOrderTransform,
+  TypeORMWhereTransform
+} from '@nestjs!/graphql-filter';
+
+import { GraphQLUUID } from 'graphql-scalars';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { Action } from 'src/casl/casl.factory';
+import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
+import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
+
+import {
+  {{properCase entity.name}},
+  {{properCase entity.name}}CreateInput,
+  {{properCase entity.name}}OrderInput,
+  {{properCase entity.name}}UpdateInput,
+  {{properCase entity.name}}WhereInput,
+  {{properCase entity.name}}s
+} from './entities/{{dashCase entity.name}}.entity';
+import { User } from 'src/users/entities/user.entity';
+
+import { {{properCase entity.name}}sService } from './{{dashCase entity.name}}s.service';
+
+@Resolver(() => {{properCase entity.name}})
+export class {{properCase entity.name}}sResolver {
+  constructor(private readonly {{camelCase entity.name}}sService: {{properCase entity.name}}sService) {}
+
+  @CheckPolicies((args) => ({
+    action: Action.Create,
+    subject: {{properCase entity.name}}.name,
+    fields: args.{{camelCase entity.name}}CreateInput
+  }))
+  @Mutation(() => {{properCase entity.name}}, { name: 'create{{properCase entity.name}}', nullable: true })
+  async create(
+    @Args('{{camelCase entity.name}}CreateInput') {{camelCase entity.name}}CreateInput: {{properCase entity.name}}CreateInput,
+    @SelectionSet() selection: SelectionInput,
+    @AuthUser() authUser: User
+  ) {
+    return await this.{{camelCase entity.name}}sService.create({{camelCase entity.name}}CreateInput, selection, authUser);
+  }
+
+  @CheckPolicies((args) => ({
+    action: Action.Update,
+    subject: {{properCase entity.name}}.name,
+    fields: args.{{camelCase entity.name}}UpdateInput
+  }))
+  @Mutation(() => {{properCase entity.name}}, { name: 'update{{properCase entity.name}}', nullable: true })
+  async update(
+    @Args('{{camelCase entity.name}}UpdateInput') {{camelCase entity.name}}UpdateInput: {{properCase entity.name}}UpdateInput,
+    @SelectionSet() selection: SelectionInput,
+    @AuthUser() authUser: User
+  ) {
+    return await this.{{camelCase entity.name}}sService.update({{camelCase entity.name}}UpdateInput, selection, authUser);
+  }
+
+  @CheckPolicies(() => ({
+    action: Action.Delete,
+    subject: {{properCase entity.name}}.name
+  }))
+  @Mutation(() => GraphQLUUID, { name: 'delete{{properCase entity.name}}' })
+  async delete(@Args('id', { type: () => GraphQLUUID }) id: string, @AuthUser() authUser: User) {
+    return await this.{{camelCase entity.name}}sService.delete(id, authUser);
+  }
+
+  @Public()
+  @CheckPolicies(() => ({
+    action: Action.Read,
+    subject: {{properCase entity.name}}.name
+  }))
+  @Query(() => {{properCase entity.name}}, { name: '{{camelCase entity.name}}', nullable: true })
+  async findOne(@Args('id', { type: () => GraphQLUUID }) id: string, @SelectionSet() selection: SelectionInput) {
+    return await this.{{camelCase entity.name}}sService.findOne(id, selection);
+  }
+
+  @Public()
+  @CheckPolicies((args) => ({
+    action: Action.Filter,
+    subject: {{properCase entity.name}}.name,
+    fields: args.where
+  }))
+  @Query(() => {{properCase entity.name}}s, { name: '{{camelCase entity.name}}s' })
+  async findMany(
+    @Args('where', { type: () => [{{properCase entity.name}}WhereInput], nullable: true }, TypeORMWhereTransform<{{properCase entity.name}}>)
+    where: FindOptionsWhere<{{properCase entity.name}}>,
+    @Args('order', { type: () => [{{properCase entity.name}}OrderInput], nullable: true }, TypeORMOrderTransform<{{properCase entity.name}}>)
+    order: FindOptionsOrder<{{properCase entity.name}}>,
+    @Args('pagination', { nullable: true }) pagination: PaginationInput,
+    @SelectionSet({ root: 'set' }) selection: SelectionInput
+  ) {
+    return await this.{{camelCase entity.name}}sService.findMany(where, order, pagination, selection);
+  }
+}

@@ -4,6 +4,7 @@
   "description": "Template for web app based on Angular and Nest. This is the back-end.",
   "author": "Giuliano Marinelli",
   "license": "MIT",
+  "type": "commonjs",
   "scripts": {
     "start:dev": "nest start",
     "start:watch": "nest start --watch",
