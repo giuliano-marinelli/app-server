@@ -1,4 +1,3 @@
-const e = require('express');
 const fs = require('fs');
 
 function parseErdFile(filePath) {
