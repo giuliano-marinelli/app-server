@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@apollo/server": "^4.x",
+    "@apollo/server": "^5.x",
+    "@as-integrations/express5": "^1.x",
     "@casl/ability": "^6.x",
     "@nestjs!/graphql-filter": "^1.x",
     "@nestjs/apollo": "^13.x",
@@ -48,7 +49,7 @@
     "reflect-metadata": "^0.x",
     "rxjs": "^7.x",
     "typeorm": "^0.x",
-    "uuid": "^11.x",
+    "uuid": "^13.x",
     "uuid-validate": "^0.x"
   },
   "devDependencies": {
