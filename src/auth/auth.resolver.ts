@@ -2,13 +2,13 @@ import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 
 import { AuthUser, SelectionInput, SelectionSet } from '@nestjs!/graphql-filter';
 
+import { Action } from '../casl/casl.factory';
+import { CheckPolicies } from '../casl/decorators/check-policies.decorator';
 import { GraphQLUUID } from 'graphql-scalars';
-import { Action } from 'src/casl/casl.factory';
-import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 
 import { Public } from './decorators/public.decorator';
 
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 
 import { AuthService } from './auth.service';
 

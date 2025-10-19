@@ -7,7 +7,7 @@ import { subject as CaslSubject } from '@casl/ability';
 import { Action, CaslFactory } from './casl.factory';
 import { CHECK_POLICIES_KEY, Policy } from './decorators/check-policies.decorator';
 
-import { SharedService } from 'src/shared/shared.service';
+import { SharedService } from '../shared/shared.service';
 
 @Injectable()
 export class PoliciesGuard implements CanActivate {

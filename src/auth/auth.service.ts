@@ -9,10 +9,10 @@ import * as DeviceDetector from 'device-detector-js';
 import { GraphQLError, GraphQLErrorOptions } from 'graphql';
 import { Repository } from 'typeorm';
 
-import { Session } from 'src/sessions/entities/session.entity';
-import { Role, User } from 'src/users/entities/user.entity';
+import { Session } from '../sessions/entities/session.entity';
+import { Role, User } from '../users/entities/user.entity';
 
-import { SharedService } from 'src/shared/shared.service';
+import { SharedService } from '../shared/shared.service';
 
 @Injectable()
 export class AuthService {

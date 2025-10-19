@@ -5,8 +5,8 @@ import { FilterField, FilterOrderType, FilterWhereType, Many } from '@nestjs!/gr
 import { GraphQLUUID } from 'graphql-scalars';
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
+import { User, UserOrderInput, UserWhereInput } from '../../users/entities/user.entity';
 import { Device, DeviceOrderInput, DeviceWhereInput } from './device.entity';
-import { User, UserOrderInput, UserWhereInput } from 'src/users/entities/user.entity';
 
 @ObjectType()
 @InputType('SessionInput', { isAbstract: true })

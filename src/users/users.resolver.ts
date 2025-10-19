@@ -9,17 +9,17 @@ import {
   TypeORMWhereTransform
 } from '@nestjs!/graphql-filter';
 
+import { Public } from '../auth/decorators/public.decorator';
+import { Action } from '../casl/casl.factory';
+import { CheckPolicies } from '../casl/decorators/check-policies.decorator';
+import { UploadTransform } from '../pipes/upload.pipe';
 import { GraphQLUUID } from 'graphql-scalars';
 import { GraphQLUpload } from 'graphql-upload-ts';
-import { Public } from 'src/auth/decorators/public.decorator';
-import { Action } from 'src/casl/casl.factory';
-import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
-import { UploadTransform } from 'src/pipes/upload.pipe';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
+import { EmailRefInput } from '../emails/entities/email.entity';
 import { Profile } from './entities/profile.entity';
 import { User, UserCreateInput, UserOrderInput, UserUpdateInput, UserWhereInput, Users } from './entities/user.entity';
-import { EmailRefInput } from 'src/emails/entities/email.entity';
 
 import { UsersService } from './users.service';
 

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 
 import { AbilityBuilder, createAliasResolver, createMongoAbility } from '@casl/ability';
 
-import { Email } from 'src/emails/entities/email.entity';
-import { Session } from 'src/sessions/entities/session.entity';
-import { Role, User } from 'src/users/entities/user.entity';
+import { Email } from '../emails/entities/email.entity';
+import { Session } from '../sessions/entities/session.entity';
+import { Role, User } from '../users/entities/user.entity';
 
 export enum Action {
   Manage = 'manage',

@@ -12,10 +12,10 @@ import * as validateUUID from 'uuid-validate';
 
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
 
-import { Session } from 'src/sessions/entities/session.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Session } from '../sessions/entities/session.entity';
+import { User } from '../users/entities/user.entity';
 
-import { SharedService } from 'src/shared/shared.service';
+import { SharedService } from '../shared/shared.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

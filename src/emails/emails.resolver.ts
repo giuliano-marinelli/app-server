@@ -9,14 +9,14 @@ import {
   TypeORMWhereTransform
 } from '@nestjs!/graphql-filter';
 
+import { Public } from '../auth/decorators/public.decorator';
+import { Action } from '../casl/casl.factory';
+import { CheckPolicies } from '../casl/decorators/check-policies.decorator';
 import { GraphQLUUID } from 'graphql-scalars';
-import { Public } from 'src/auth/decorators/public.decorator';
-import { Action } from 'src/casl/casl.factory';
-import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
+import { User } from '../users/entities/user.entity';
 import { Email, EmailCreateInput, EmailOrderInput, EmailWhereInput, Emails } from './entities/email.entity';
-import { User } from 'src/users/entities/user.entity';
 
 import { EmailsService } from './emails.service';
 

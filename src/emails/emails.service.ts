@@ -8,8 +8,8 @@ import * as bcrypt from 'bcryptjs';
 import { EntityManager, FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 
+import { Role, User } from '../users/entities/user.entity';
 import { Email, EmailCreateInput } from './entities/email.entity';
-import { Role, User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class EmailsService {

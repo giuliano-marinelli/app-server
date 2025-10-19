@@ -9,13 +9,13 @@ import {
   TypeORMWhereTransform
 } from '@nestjs!/graphql-filter';
 
+import { Action } from '../casl/casl.factory';
+import { CheckPolicies } from '../casl/decorators/check-policies.decorator';
 import { GraphQLUUID } from 'graphql-scalars';
-import { Action } from 'src/casl/casl.factory';
-import { CheckPolicies } from 'src/casl/decorators/check-policies.decorator';
 import { FindOptionsOrder, FindOptionsWhere } from 'typeorm';
 
+import { User } from '../users/entities/user.entity';
 import { Session, SessionOrderInput, SessionWhereInput, Sessions } from './entities/session.entity';
-import { User } from 'src/users/entities/user.entity';
 
 import { SessionsService } from './sessions.service';
 

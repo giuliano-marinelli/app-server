@@ -5,7 +5,7 @@ import { FilterField, FilterOrderType, FilterWhereType } from '@nestjs!/graphql-
 import { IsUrl, MaxLength } from 'class-validator';
 import { Column, JoinColumn, OneToOne } from 'typeorm';
 
-import { Email, EmailOrderInput, EmailWhereInput } from 'src/emails/entities/email.entity';
+import { Email, EmailOrderInput, EmailWhereInput } from '../../emails/entities/email.entity';
 
 @ObjectType()
 @InputType('ProfileInput')

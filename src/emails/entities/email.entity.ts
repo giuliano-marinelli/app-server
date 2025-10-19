@@ -2,9 +2,9 @@ import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
 
 import { FilterField, FilterOrderType, FilterWhereType, Many } from '@nestjs!/graphql-filter';
 
+import { CheckPolicy } from '../../casl/casl.middleware';
 import { IsEmail, MaxLength } from 'class-validator';
 import { GraphQLEmailAddress, GraphQLUUID } from 'graphql-scalars';
-import { CheckPolicy } from 'src/casl/casl.middleware';
 import {
   Column,
   CreateDateColumn,
@@ -15,7 +15,7 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 
-import { User, UserOrderInput, UserRefInput, UserWhereInput } from 'src/users/entities/user.entity';
+import { User, UserOrderInput, UserRefInput, UserWhereInput } from '../../users/entities/user.entity';
 
 @ObjectType()
 @InputType('EmailInput', { isAbstract: true })

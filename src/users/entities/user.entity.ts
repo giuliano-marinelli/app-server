@@ -12,9 +12,9 @@ import {
 
 import { FilterField, FilterOrderType, FilterWhereType, Many } from '@nestjs!/graphql-filter';
 
+import { CheckPolicy } from '../../casl/casl.middleware';
 import { IsEmail, MaxLength, MinLength } from 'class-validator';
 import { GraphQLEmailAddress, GraphQLUUID } from 'graphql-scalars';
-import { CheckPolicy } from 'src/casl/casl.middleware';
 import {
   Column,
   CreateDateColumn,
@@ -27,9 +27,9 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 
+import { Email, EmailOrderInput, EmailWhereInput } from '../../emails/entities/email.entity';
+import { Session, SessionOrderInput, SessionWhereInput } from '../../sessions/entities/session.entity';
 import { Profile, ProfileOrderInput, ProfileWhereInput } from './profile.entity';
-import { Email, EmailOrderInput, EmailWhereInput } from 'src/emails/entities/email.entity';
-import { Session, SessionOrderInput, SessionWhereInput } from 'src/sessions/entities/session.entity';
 
 export enum Role {
   USER = 'user',
